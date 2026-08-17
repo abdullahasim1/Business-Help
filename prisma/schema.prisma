@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  BUSINESS_ADMIN
+}
+
+enum BusinessStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ContactStatus {
+  NEW
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum ConversationChannel {
+  WIDGET
+  DASHBOARD
+}
+
+// 1. Users also keep their current login session. This keeps authentication simple.
+model User {
+  id               Int       @id @default(autoincrement())
+  name             String
+  email            String    @unique
+  passwordHash     String
+  role             Role
+  businessId       Int?
+  business         Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  sessionTokenHash String?   @unique
+  sessionExpiresAt DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([businessId])
+}
+
+// 2. One business row contains its profile, AI settings, widget settings, and knowledge text.
+model Business {
+  id                Int            @id @default(autoincrement())
+  name              String
+  website           String?
+  status            BusinessStatus @default(ACTIVE)
+  agentName         String
+  agentInstructions String         @db.Text
+  agentLanguage     String         @default("English")
+  agentTone         String         @default("Helpful")
+  agentStatus       AgentStatus    @default(ACTIVE)
+  voiceAgentId      String?
+  chatAgentId       String?
+  calendlyUrl       String?
+  knowledgeText     String?        @db.LongText
+  welcomeMessage    String         @default("Hi! How can I help today?")
+  primaryColor      String         @default("#0f766e")
+  callEnabled       Boolean        @default(true)
+  chatEnabled       Boolean        @default(true)
+  publicKey         String         @unique @default(cuid())
+  allowedOrigins    String?        @db.Text
+  users             User[]
+  contacts          Contact[]
+  conversations     Conversation[]
+  calls             Call[]
+  knowledgeDocs     KnowledgeDoc[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+// 3. A contact is one lead captured by the widget.
+model Contact {
+  id                Int            @id @default(autoincrement())
+  businessId        Int
+  business          Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name              String?
+  email             String?
+  phone             String?
+  interestedService String?
+  status            ContactStatus  @default(NEW)
+  source            String         @default("AI Widget")
+  visitorToken      String?        @unique
+  conversations     Conversation[]
+  calls             Call[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([businessId])
+  @@index([email])
+  @@index([phone])
+}
+
+// 4. The full chat history is stored as simple JSON instead of a separate Message table.
+model Conversation {
+  id           Int                 @id @default(autoincrement())
+  businessId   Int
+  business     Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId    Int?
+  contact      Contact?            @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  channel      ConversationChannel @default(WIDGET)
+  visitorToken String?
+  providerChatId String?
+  messagesJson String              @db.LongText
+  createdAt    DateTime            @default(now())
+
+  @@index([businessId])
+  @@index([contactId])
+}
+
+// 5. Calls stay separate because one contact can have more than one call.
+model Call {
+  id             Int      @id @default(autoincrement())
+  providerCallId String?  @unique
+  businessId     Int
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId      Int?
+  contact        Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  duration       Int?
+  transcript     String?  @db.LongText
+  summary        String?  @db.Text
+  recordingUrl   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([contactId])
+}
+
+// 6. Global key/value settings (e.g. auto-created default Retell agents).
+model AppSetting {
+  key   String @id
+  value String @db.Text
+}
+
+// 7. Uploaded knowledge documents (PDFs) whose extracted text feeds the AI.
+model KnowledgeDoc {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileSize   Int
+  content    String   @db.LongText
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+}

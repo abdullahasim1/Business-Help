@@ -1,0 +1,19 @@
+import { NextResponse } from "next/server";
+import { requireBusinessAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  const user = await requireBusinessAdmin();
+  const conversations = await prisma.conversation.findMany({
+    where: { businessId: user.businessId! },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      createdAt: true,
+      messagesJson: true,
+      contact: { select: { name: true, email: true, phone: true } }
+    }
+  });
+
+  return NextResponse.json(conversations);
+}
