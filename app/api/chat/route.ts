@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { corsJson, corsOptions, publicCorsHeaders } from "@/lib/cors";
 import { createWidgetContact, findBusinessContact } from "@/lib/contacts";
 import { addMessage } from "@/lib/conversations";
@@ -10,15 +9,7 @@ import { handleRouteError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { corsOrigin, isAllowedWidgetRequest } from "@/lib/public-widget";
 import { allowRequest, requestIp } from "@/lib/rate-limit";
-
-const chatSchema = z.object({
-  businessId: z.coerce.number().int().positive(),
-  conversationId: z.coerce.number().int().positive().optional().nullable(),
-  contactId: z.coerce.number().int().positive().optional().nullable(),
-  visitorToken: z.string().min(20).optional().nullable(),
-  widgetKey: z.string().min(20),
-  message: z.string().min(1).max(4000)
-});
+import { jsonBody, maxLength, positiveInt, str, strOrNull } from "@/lib/validation";
 
 export function OPTIONS(request: Request) {
   return corsOptions(request);
@@ -27,16 +18,22 @@ export function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   const origin = corsOrigin(request);
   try {
-    const body = chatSchema.parse(await request.json());
+    const body = await jsonBody(request);
+    const businessId = positiveInt(body.businessId, "businessId");
+    const conversationId = body.conversationId === undefined || body.conversationId === null ? null : positiveInt(body.conversationId, "conversationId");
+    const contactIdIn = body.contactId === undefined || body.contactId === null ? null : positiveInt(body.contactId, "contactId");
+    const visitorToken = strOrNull(body.visitorToken, "visitorToken");
+    const widgetKey = str(body.widgetKey, "widgetKey", 20);
+    const message = maxLength(str(body.message, "message", 1), 4000, "message") as string;
     const business = await prisma.business.findFirst({
-      where: { id: body.businessId, status: "ACTIVE" }
+      where: { id: businessId, status: "ACTIVE" }
     });
 
     if (!business || business.agentStatus !== "ACTIVE" || !business.chatEnabled) {
       return corsJson({ error: "Chat is not available for this business" }, { status: 404 }, origin);
     }
 
-    if (!isAllowedWidgetRequest(request, business, body.widgetKey)) {
+    if (!isAllowedWidgetRequest(request, business, widgetKey)) {
       return corsJson({ error: "This widget is not allowed on this website." }, { status: 403 }, origin);
     }
 
@@ -44,25 +41,25 @@ export async function POST(request: Request) {
       return corsJson({ error: "Too many chat messages. Please try again shortly." }, { status: 429 }, origin);
     }
 
-    const existingContact = body.contactId ? await findBusinessContact(body.contactId, business.id, body.visitorToken) : null;
-    if (body.contactId && !existingContact) {
+    const existingContact = contactIdIn ? await findBusinessContact(contactIdIn, business.id, visitorToken) : null;
+    if (contactIdIn && !existingContact) {
       return corsJson({ error: "Invalid contact for business" }, { status: 403 }, origin);
     }
 
-    const newContact = existingContact ? null : await createWidgetContact(business.id, extractLeadFields(body.message));
+    const newContact = existingContact ? null : await createWidgetContact(business.id, extractLeadFields(message));
     const contactId = existingContact?.id || newContact?.id;
-    const visitorToken = existingContact?.visitorToken || newContact?.visitorToken || body.visitorToken || null;
+    const resolvedVisitorToken = existingContact?.visitorToken || newContact?.visitorToken || visitorToken || null;
 
-    const conversation = body.conversationId
+    const conversation = conversationId
       ? await prisma.conversation.findFirst({
-          where: { id: body.conversationId, businessId: business.id, visitorToken: body.visitorToken || "" }
+          where: { id: conversationId, businessId: business.id, visitorToken: visitorToken || "" }
         })
       : await prisma.conversation.create({
           data: {
           businessId: business.id,
           contactId,
           channel: "WIDGET",
-          visitorToken,
+          visitorToken: resolvedVisitorToken,
           messagesJson: "[]"
           }
         });
@@ -91,11 +88,11 @@ export async function POST(request: Request) {
       }
     }
     if (chatAgentId) {
-      const result = await generateRetellResponse({ ...chatContext, chatAgentId }, providerChatId, body.message);
+      const result = await generateRetellResponse({ ...chatContext, chatAgentId }, providerChatId, message);
       providerChatId = result.providerChatId;
       answer = result.answer;
     } else {
-      answer = generateLocalKnowledgeResponse(business.agentName, knowledge, body.message, business.calendlyUrl);
+      answer = generateLocalKnowledgeResponse(business.agentName, knowledge, message, business.calendlyUrl);
     }
 
     await prisma.conversation.update({
@@ -103,7 +100,7 @@ export async function POST(request: Request) {
       data: {
         contactId: conversation.contactId || contactId,
         providerChatId,
-        messagesJson: addMessage(addMessage(conversation.messagesJson, "user", body.message), "assistant", answer)
+        messagesJson: addMessage(addMessage(conversation.messagesJson, "user", message), "assistant", answer)
       }
     });
 

@@ -1,29 +1,31 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/auth";
 import { handleRouteError } from "@/lib/http";
 import { parseId } from "@/lib/ids";
 import { prisma } from "@/lib/prisma";
-
-const updateBusinessSchema = z.object({
-  name: z.string().min(2).optional(),
-  website: z.string().nullable().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  voiceAgentId: z.union([z.string().min(5), z.literal(""), z.null()]).optional()
-    .transform((value) => value === undefined ? undefined : value || null),
-  chatAgentId: z.union([z.string().min(5), z.literal(""), z.null()]).optional()
-    .transform((value) => value === undefined ? undefined : value || null)
-});
+import { jsonBody, oneOf, str, strOrNull } from "@/lib/validation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireSuperAdmin();
     const id = parseId((await params).id);
     if (!id) throw new Error("Invalid business ID");
-    const body = updateBusinessSchema.parse(await request.json());
+    const body = await jsonBody(request);
+    const data: {
+      name?: string;
+      website?: string | null;
+      status?: "ACTIVE" | "INACTIVE";
+      voiceAgentId?: string | null;
+      chatAgentId?: string | null;
+    } = {};
+    if (body.name !== undefined) data.name = str(body.name, "name", 2);
+    if (body.website !== undefined) data.website = strOrNull(body.website, "website");
+    if (body.status !== undefined) data.status = oneOf(body.status, ["ACTIVE", "INACTIVE"], "status") as "ACTIVE" | "INACTIVE";
+    if (body.voiceAgentId !== undefined) data.voiceAgentId = strOrNull(body.voiceAgentId, "voiceAgentId");
+    if (body.chatAgentId !== undefined) data.chatAgentId = strOrNull(body.chatAgentId, "chatAgentId");
     const business = await prisma.business.update({
       where: { id },
-      data: body
+      data
     });
 
     return NextResponse.json({ business });

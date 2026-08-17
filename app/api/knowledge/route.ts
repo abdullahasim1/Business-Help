@@ -1,25 +1,21 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { requireBusinessAdmin } from "@/lib/auth";
 import { handleRouteError, jsonError } from "@/lib/http";
 import { cleanText, saveKnowledge } from "@/lib/knowledge";
 import { fetchPublicWebsite } from "@/lib/safe-url";
-
-const knowledgeSchema = z.object({
-  type: z.enum(["WEBSITE", "MANUAL"]),
-  url: z.string().url().optional().or(z.literal("")),
-  content: z.string().optional()
-});
+import { jsonBody, oneOf, strOptional, url } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
     const user = await requireBusinessAdmin();
-    const body = knowledgeSchema.parse(await request.json());
-    let content = body.content || "";
+    const body = await jsonBody(request);
+    const type = oneOf(body.type, ["WEBSITE", "MANUAL"], "type");
+    const knowledgeUrl = url(body.url, "url", true);
+    let content = strOptional(body.content, "content") || "";
 
-    if (body.type === "WEBSITE") {
-      if (!body.url) return jsonError("Website URL is required");
-      content = cleanText(await fetchPublicWebsite(body.url));
+    if (type === "WEBSITE") {
+      if (!knowledgeUrl) return jsonError("Website URL is required");
+      content = cleanText(await fetchPublicWebsite(knowledgeUrl));
     }
 
     if (!content.trim()) return jsonError("Knowledge content is empty", 422);

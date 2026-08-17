@@ -12,6 +12,7 @@ const Contacts = lazy(() => import("@/pages/Contacts"));
 const Conversations = lazy(() => import("@/pages/Conversations"));
 const ConversationDetail = lazy(() => import("@/pages/ConversationDetail"));
 const Calls = lazy(() => import("@/pages/Calls"));
+const Bookings = lazy(() => import("@/pages/Bookings"));
 const Agent = lazy(() => import("@/pages/Agent"));
 const Knowledge = lazy(() => import("@/pages/Knowledge"));
 const Widget = lazy(() => import("@/pages/Widget"));
@@ -26,6 +27,7 @@ const businessRoutes: RouteObject[] = [
   { path: "conversations", element: <Conversations /> },
   { path: "conversations/:id", element: <ConversationDetail /> },
   { path: "calls", element: <Calls /> },
+  { path: "bookings", element: <Bookings /> },
   { path: "agent", element: <Agent /> },
   { path: "knowledge", element: <Knowledge /> },
   { path: "widget", element: <Widget /> },

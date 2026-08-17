@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/auth";
 import { handleRouteError } from "@/lib/http";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
-
-const createBusinessSchema = z.object({
-  name: z.string().min(2),
-  website: z.string().optional().nullable(),
-  adminName: z.string().min(2),
-  adminEmail: z.string().email(),
-  adminPassword: z.string().min(8)
-});
+import { email, jsonBody, str, strOrNull } from "@/lib/validation";
 
 export async function GET() {
   await requireSuperAdmin();
@@ -33,17 +25,22 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await requireSuperAdmin();
-    const body = createBusinessSchema.parse(await request.json());
-    const passwordHash = await hashPassword(body.adminPassword);
+    const body = await jsonBody(request);
+    const name = str(body.name, "name", 2);
+    const website = strOrNull(body.website, "website");
+    const adminName = str(body.adminName, "adminName", 2);
+    const adminEmail = email(body.adminEmail);
+    const adminPassword = str(body.adminPassword, "adminPassword", 8);
+    const passwordHash = await hashPassword(adminPassword);
 
     const business = await prisma.business.create({
       data: {
-        name: body.name,
-        website: body.website || null,
+        name,
+        website: website || null,
         users: {
           create: {
-            name: body.adminName,
-            email: body.adminEmail.toLowerCase(),
+            name: adminName,
+            email: adminEmail,
             passwordHash,
             role: "BUSINESS_ADMIN"
           }

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { ValidationError } from "@/lib/validation";
 
 export function jsonError(message: string, status = 400, headers?: HeadersInit) {
   return NextResponse.json({ error: message }, { status, headers });
 }
 
 export function handleRouteError(error: unknown, headers?: HeadersInit) {
-  if (error instanceof ZodError) {
-    return jsonError(error.issues[0]?.message ?? "Invalid request", 422, headers);
+  if (error instanceof ValidationError) {
+    return jsonError(error.message, 422, headers);
   }
 
   if (error instanceof Error && error.message.includes("not allowed")) {

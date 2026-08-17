@@ -10,7 +10,8 @@ const groups = [
       ["Dashboard", "/dashboard", "⌂"],
       ["Contacts", "/dashboard/contacts", "♙"],
       ["Conversations", "/dashboard/conversations", "◌"],
-      ["Calls", "/dashboard/calls", "⌕"]
+      ["Calls", "/dashboard/calls", "⌕"],
+      ["Bookings", "/dashboard/bookings", "✉"]
     ]
   },
   {

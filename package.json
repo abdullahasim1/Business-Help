@@ -19,9 +19,7 @@
     "prisma": "6.19.3",
     "react": "latest",
     "react-dom": "latest",
-    "retell-client-js-sdk": "^2.0.8",
-    "tsx": "latest",
-    "zod": "latest"
+    "tsx": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",

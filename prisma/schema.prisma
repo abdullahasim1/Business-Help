@@ -75,6 +75,7 @@ model Business {
   contacts          Contact[]
   conversations     Conversation[]
   calls             Call[]
+  bookings          Booking[]
   knowledgeDocs     KnowledgeDoc[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -94,12 +95,33 @@ model Contact {
   visitorToken      String?        @unique
   conversations     Conversation[]
   calls             Call[]
+  bookings          Booking[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   @@index([businessId])
   @@index([email])
   @@index([phone])
+}
+
+model Booking {
+  id                Int      @id @default(autoincrement())
+  businessId        Int
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId         Int?
+  contact           Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  calendlyEventUuid String   @unique
+  eventName         String?
+  inviteeName       String?
+  inviteeEmail      String?
+  inviteeTimezone   String?
+  startTime         DateTime
+  endTime           DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([contactId])
 }
 
 // 4. The full chat history is stored as simple JSON instead of a separate Message table.

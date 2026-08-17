@@ -1,31 +1,28 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { requireBusinessAdmin } from "@/lib/auth";
 import { handleRouteError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-
-const agentSchema = z.object({
-  name: z.string().min(2),
-  systemInstructions: z.string().min(10),
-  language: z.string().min(2).default("English"),
-  tone: z.string().min(2).default("Helpful"),
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-  calendlyUrl: z.string().url().optional().or(z.literal(""))
-});
+import { jsonBody, oneOf, str, url } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
     const user = await requireBusinessAdmin();
-    const body = agentSchema.parse(await request.json());
+    const body = await jsonBody(request);
+    const name = str(body.name, "name", 2);
+    const systemInstructions = str(body.systemInstructions, "systemInstructions", 10);
+    const language = str(body.language === undefined ? "English" : body.language, "language", 2);
+    const tone = str(body.tone === undefined ? "Helpful" : body.tone, "tone", 2);
+    const status = oneOf(body.status, ["ACTIVE", "INACTIVE"], "status", "ACTIVE") as "ACTIVE" | "INACTIVE";
+    const calendlyUrl = url(body.calendlyUrl, "calendlyUrl", true) || null;
     const business = await prisma.business.update({
       where: { id: user.businessId! },
       data: {
-        agentName: body.name,
-        agentInstructions: body.systemInstructions,
-        agentLanguage: body.language,
-        agentTone: body.tone,
-        agentStatus: body.status,
-        calendlyUrl: body.calendlyUrl || null
+        agentName: name,
+        agentInstructions: systemInstructions,
+        agentLanguage: language,
+        agentTone: tone,
+        agentStatus: status,
+        calendlyUrl
       }
     });
 

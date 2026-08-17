@@ -81,6 +81,12 @@ export async function requireUser() {
   return user;
 }
 
+export async function requireAdmin() {
+  const user = await requireUser();
+  if (user.role !== Role.BUSINESS_ADMIN && user.role !== Role.SUPER_ADMIN) redirect("/login");
+  return user;
+}
+
 export async function requireSuperAdmin() {
   const user = await requireUser();
   if (user.role !== Role.SUPER_ADMIN) redirect("/dashboard");
