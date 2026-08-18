@@ -1,9 +1,10 @@
-import { Form, Formik } from "formik";
 import { useNavigate } from "react-router-dom";
-import Field from "../components/Field";
-import { api } from "../lib/api";
-import { useFetch } from "../lib/hooks";
-import { widgetSchema } from "../lib/validations";
+import Field from "../../components/Field";
+import FormikForm from "../../components/ui/FormikForm";
+import PageHeader from "../../components/ui/PageHeader";
+import { api } from "../../lib/api";
+import { useFetch } from "../../lib/hooks";
+import { widgetSchema } from "../../lib/validations";
 
 type WidgetData = {
   chatEnabled: boolean;
@@ -12,6 +13,8 @@ type WidgetData = {
   publicKey: string;
   businessId: number;
 };
+
+type WidgetForm = { chatEnabled: boolean; callEnabled: boolean; allowedOrigins: string | null };
 
 const Widget = () => {
   const navigate = useNavigate();
@@ -22,44 +25,32 @@ const Widget = () => {
 
   return (
     <section>
-      <h1 className="page-title">Widget</h1>
-      <p className="page-subtitle">Customize the visitor-facing chat and call launcher.</p>
+      <PageHeader title="Widget" subtitle="Customize the visitor-facing chat and call launcher." />
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <Formik
+        <FormikForm<WidgetForm>
           initialValues={{
             chatEnabled: data.chatEnabled,
             callEnabled: data.callEnabled,
             allowedOrigins: data.allowedOrigins
           }}
-          validationSchema={widgetSchema}
-          onSubmit={async (values, { setSubmitting, setStatus }) => {
-            setStatus("");
-            try {
-              await api("/api/widget/settings", values);
-              navigate(0);
-            } catch (error) {
-              setStatus((error as Error).message);
-            } finally {
-              setSubmitting(false);
-            }
+          schema={widgetSchema}
+          submitLabel="Save widget settings"
+          className="panel grid gap-4 p-5"
+          onSubmit={async (values) => {
+            await api("/api/widget/settings", values);
+            navigate(0);
           }}
         >
-          {({ isSubmitting, status }) => (
-            <Form className="panel grid gap-4 p-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Chat enabled" name="chatEnabled" type="checkbox" />
-                <Field label="Call enabled" name="callEnabled" type="checkbox" />
-              </div>
-              <Field label="Allowed origins" name="allowedOrigins" as="textarea" className="field min-h-24" hint="Extra websites (one per line) where the widget may run. Your business website is always allowed." />
-              {status ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{status}</div> : null}
-              <button type="submit" className="btn-primary w-fit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save widget settings"}
-              </button>
-            </Form>
-          )}
-        </Formik>
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Chat enabled" name="chatEnabled" type="checkbox" />
+              <Field label="Call enabled" name="callEnabled" type="checkbox" />
+            </div>
+            <Field label="Allowed origins" name="allowedOrigins" as="textarea" className="field min-h-24" hint="Extra websites (one per line) where the widget may run. Your business website is always allowed." />
+          </>
+        </FormikForm>
 
-        <div className="panel p-5 h-fit">
+        <div className="panel h-fit p-5">
           <h2 className="font-semibold text-slate-900">Embed code</h2>
           <p className="mt-1 text-sm text-slate-500">Paste this script before the closing body tag on any website.</p>
           <pre className="mt-4 overflow-x-auto rounded-md bg-slate-950 p-4 text-sm leading-6 text-slate-100">{embed}</pre>
@@ -70,6 +61,6 @@ const Widget = () => {
       </div>
     </section>
   );
-}
+};
 
 export default Widget;

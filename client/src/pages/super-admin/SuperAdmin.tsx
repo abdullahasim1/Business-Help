@@ -1,5 +1,7 @@
-import MetricCard from "../components/MetricCard";
-import { useFetch } from "../lib/hooks";
+import ErrorBanner from "../../components/ui/ErrorBanner";
+import MetricCard from "../../components/MetricCard";
+import PageHeader from "../../components/ui/PageHeader";
+import { useFetch } from "../../lib/hooks";
 
 type OverviewData = { businesses: number; contacts: number; conversations: number; calls: number };
 
@@ -8,9 +10,8 @@ const SuperAdmin = () => {
 
   return (
     <section>
-      <h1 className="page-title">Super Admin</h1>
-      <p className="page-subtitle">Platform-wide snapshot across businesses, leads, chats, and calls.</p>
-      {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+      <PageHeader title="Super Admin" subtitle="Platform-wide snapshot across businesses, leads, chats, and calls." />
+      {error ? <ErrorBanner message={error} className="mt-4" /> : null}
       <div className="mt-5 grid gap-4 md:grid-cols-4">
         <MetricCard label="Total Businesses" value={data?.businesses ?? "—"} />
         <MetricCard label="Total Contacts" value={data?.contacts ?? "—"} />
@@ -19,6 +20,6 @@ const SuperAdmin = () => {
       </div>
     </section>
   );
-}
+};
 
 export default SuperAdmin;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api } from "../../lib/api";
 
 type DemoBusiness = { id: number; name: string; publicKey: string } | null;
 

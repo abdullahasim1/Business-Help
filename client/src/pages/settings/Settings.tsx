@@ -1,4 +1,5 @@
-import { useFetch } from "../lib/hooks";
+import PageHeader from "../../components/ui/PageHeader";
+import { useFetch } from "../../lib/hooks";
 
 type SettingsData = {
   name: string;
@@ -11,8 +12,7 @@ const Settings = () => {
 
   return (
     <section>
-      <h1 className="page-title">Settings</h1>
-      <p className="page-subtitle">Business profile details for this workspace.</p>
+      <PageHeader title="Settings" subtitle="Business profile details for this workspace." />
       <div className="panel mt-5 max-w-2xl divide-y divide-slate-100">
         <Row label="Business" value={data?.name ?? "-"} />
         <Row label="Website" value={data?.website ?? "-"} />
@@ -20,7 +20,7 @@ const Settings = () => {
       </div>
     </section>
   );
-}
+};
 
 const Row = ({ label, value }: { label: string; value: string }) => {
   return (
@@ -29,6 +29,6 @@ const Row = ({ label, value }: { label: string; value: string }) => {
       <span className="font-semibold text-slate-900">{value}</span>
     </div>
   );
-}
+};
 
 export default Settings;

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "../lib/api";
+import Button from "../../components/ui/Button";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorBanner from "../../components/ui/ErrorBanner";
+import PageHeader from "../../components/ui/PageHeader";
+import TableShell from "../../components/ui/TableShell";
+import { api } from "../../lib/api";
 
 type Booking = {
   id: number;
@@ -53,17 +58,17 @@ const Bookings = () => {
 
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Bookings</h1>
-          <p className="page-subtitle">Appointments scheduled through Calendly.</p>
-        </div>
-        <button className="btn-primary" onClick={syncNow} disabled={syncing}>
-          {syncing ? "Syncing..." : "Sync now"}
-        </button>
-      </div>
+      <PageHeader
+        title="Bookings"
+        subtitle="Appointments scheduled through Calendly."
+        right={
+          <Button onClick={syncNow} disabled={syncing}>
+            {syncing ? "Syncing..." : "Sync now"}
+          </Button>
+        }
+      />
 
-      {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+      {error ? <ErrorBanner message={error} className="mt-4" /> : null}
 
       {!data?.configured ? (
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-6">
@@ -85,47 +90,44 @@ const Bookings = () => {
         </div>
       ) : null}
 
-      <div className="table-shell mt-5">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Date &amp; time</th>
-              <th>Invitee</th>
-              <th>Email</th>
-              <th>Event</th>
-              <th>Business</th>
-              <th>Lead</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map((booking) => (
-              <tr key={booking.id}>
-                <td>
-                  <div className="font-medium text-slate-900">{new Date(booking.startTime).toLocaleDateString()}</div>
-                  <div className="text-xs text-slate-500">
-                    {new Date(booking.startTime).toLocaleTimeString()} – {new Date(booking.endTime).toLocaleTimeString()}
-                  </div>
-                  {booking.inviteeTimezone ? <div className="text-xs text-slate-400">{booking.inviteeTimezone}</div> : null}
-                </td>
-                <td className="font-medium text-slate-900">{booking.inviteeName || "-"}</td>
-                <td>{booking.inviteeEmail || "-"}</td>
-                <td>{booking.eventName || "-"}</td>
-                <td>{booking.business?.name || "-"}</td>
-                <td>{booking.contactId ? `Lead #${booking.contactId}` : "-"}</td>
-              </tr>
-            ))}
-            {!bookings.length ? (
+      <TableShell className="mt-5">
+        {bookings.length ? (
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={6} className="py-10 text-center text-slate-500">
-                  Abhi koi booking nahi.
-                </td>
+                <th>Date &amp; time</th>
+                <th>Invitee</th>
+                <th>Email</th>
+                <th>Event</th>
+                <th>Business</th>
+                <th>Lead</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {bookings.map((booking) => (
+                <tr key={booking.id}>
+                  <td>
+                    <div className="font-medium text-slate-900">{new Date(booking.startTime).toLocaleDateString()}</div>
+                    <div className="text-xs text-slate-500">
+                      {new Date(booking.startTime).toLocaleTimeString()} – {new Date(booking.endTime).toLocaleTimeString()}
+                    </div>
+                    {booking.inviteeTimezone ? <div className="text-xs text-slate-400">{booking.inviteeTimezone}</div> : null}
+                  </td>
+                  <td className="font-medium text-slate-900">{booking.inviteeName || "-"}</td>
+                  <td>{booking.inviteeEmail || "-"}</td>
+                  <td>{booking.eventName || "-"}</td>
+                  <td>{booking.business?.name || "-"}</td>
+                  <td>{booking.contactId ? `Lead #${booking.contactId}` : "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <EmptyState title="No bookings yet" description="Appointments will appear here when visitors book through the widget." />
+        )}
+      </TableShell>
     </section>
   );
-}
+};
 
 export default Bookings;

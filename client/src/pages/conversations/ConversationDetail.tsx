@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
-import { useFetch } from "../lib/hooks";
-import { readMessages, type Conversation } from "./Conversations";
+import { useFetch } from "../../lib/hooks";
+import { readMessages, type Conversation } from "../../lib/conversations";
 
 const ConversationDetail = () => {
   const { id } = useParams();
@@ -38,6 +38,6 @@ const ConversationDetail = () => {
       </div>
     </section>
   );
-}
+};
 
 export default ConversationDetail;

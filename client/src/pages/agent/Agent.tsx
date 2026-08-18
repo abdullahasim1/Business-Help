@@ -1,9 +1,10 @@
-import { Form, Formik } from "formik";
 import { useNavigate } from "react-router-dom";
-import Field from "../components/Field";
-import { api } from "../lib/api";
-import { useFetch } from "../lib/hooks";
-import { agentSchema } from "../lib/validations";
+import Field from "../../components/Field";
+import FormikForm from "../../components/ui/FormikForm";
+import PageHeader from "../../components/ui/PageHeader";
+import { api } from "../../lib/api";
+import { useFetch } from "../../lib/hooks";
+import { agentSchema } from "../../lib/validations";
 
 type AgentData = {
   name: string;
@@ -22,48 +23,36 @@ const Agent = () => {
 
   return (
     <section>
-      <h1 className="page-title">AI Agent</h1>
-      <p className="page-subtitle">Configure the single assistant this business exposes through the widget.</p>
+      <PageHeader title="AI Agent" subtitle="Configure the single assistant this business exposes through the widget." />
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Formik
+        <FormikForm
           initialValues={data}
-          validationSchema={agentSchema}
-          onSubmit={async (values, { setSubmitting, setStatus }) => {
-            setStatus("");
-            try {
-              await api("/api/agent", values);
-              navigate(0);
-            } catch (error) {
-              setStatus((error as Error).message);
-            } finally {
-              setSubmitting(false);
-            }
+          schema={agentSchema}
+          submitLabel="Save agent"
+          className="panel grid gap-4 p-5"
+          onSubmit={async (values) => {
+            await api("/api/agent", values);
+            navigate(0);
           }}
         >
-          {({ isSubmitting, status }) => (
-            <Form className="panel grid gap-4 p-5">
-              <div>
-                <h2 className="font-semibold text-slate-900">Agent profile</h2>
-                <p className="mt-1 text-sm text-slate-500">Keep instructions direct and grounded in your knowledge base.</p>
-              </div>
-              <Field label="Agent name" name="name" placeholder="Agent name" />
-              <Field label="System instructions" name="systemInstructions" as="textarea" className="field min-h-44" placeholder="Tell the AI how to answer, what to avoid, and how to handle unknowns." />
-              <div className="grid gap-4 md:grid-cols-3">
-                <Field label="Language" name="language" placeholder="Language" />
-                <Field label="Tone" name="tone" placeholder="Tone" />
-                <Field label="Status" name="status" as="select">
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
-                </Field>
-              </div>
-              <Field label="Calendly link (booking)" name="calendlyUrl" placeholder="https://calendly.com/your-name" />
-              {status ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{status}</div> : null}
-              <button type="submit" className="btn-primary w-fit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save agent"}
-              </button>
-            </Form>
-          )}
-        </Formik>
+          <>
+            <div>
+              <h2 className="font-semibold text-slate-900">Agent profile</h2>
+              <p className="mt-1 text-sm text-slate-500">Keep instructions direct and grounded in your knowledge base.</p>
+            </div>
+            <Field label="Agent name" name="name" placeholder="Agent name" />
+            <Field label="System instructions" name="systemInstructions" as="textarea" className="field min-h-44" placeholder="Tell the AI how to answer, what to avoid, and how to handle unknowns." />
+            <div className="grid gap-4 md:grid-cols-3">
+              <Field label="Language" name="language" placeholder="Language" />
+              <Field label="Tone" name="tone" placeholder="Tone" />
+              <Field label="Status" name="status" as="select">
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </Field>
+            </div>
+            <Field label="Calendly link (booking)" name="calendlyUrl" placeholder="https://calendly.com/your-name" />
+          </>
+        </FormikForm>
 
         <aside className="panel h-fit p-5">
           <div className="section-label">Behavior</div>
@@ -77,6 +66,6 @@ const Agent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default Agent;

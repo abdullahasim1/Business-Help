@@ -1,9 +1,11 @@
 import PageContainer from "@/components/ui/PageContainer";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import PageHeader from "@/components/ui/PageHeader";
+import ErrorBanner from "@/components/ui/ErrorBanner";
+import StatusPill from "@/components/ui/StatusPill";
 import StatsCards from "@/components/dashboard/StatsCards";
 import LaunchChecklist from "@/components/dashboard/LaunchChecklist";
 import QuickActions from "@/components/dashboard/QuickActions";
-import { useFetch } from "../lib/hooks";
+import { useFetch } from "../../lib/hooks";
 
 type DashboardData = {
   contacts: number;
@@ -24,19 +26,18 @@ const Dashboard = () => {
   return (
     <PageContainer>
       <div className="mx-auto w-full max-w-[1172px]">
-        <DashboardHeader
+        <PageHeader
           label="Overview"
           title="Dashboard"
           subtitle="Track visitor activity and keep your AI assistant ready to convert leads."
           right={
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <StatusPill dot>
               Workspace online
-            </span>
+            </StatusPill>
           }
         />
 
-        {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+        {error ? <ErrorBanner message={error} className="mt-4" /> : null}
 
         <StatsCards
           contacts={data?.contacts ?? 0}

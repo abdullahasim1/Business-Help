@@ -1,23 +1,10 @@
 import { Link } from "react-router-dom";
-import { useFetch } from "../lib/hooks";
-
-export type Conversation = {
-  id: number;
-  createdAt: string;
-  contact: { name: string | null; email: string | null; phone: string | null } | null;
-  messagesJson: string;
-};
-
-export type ChatMessage = { role: "user" | "assistant"; content: string; createdAt: string };
-
-export const readMessages = (value: string): ChatMessage[] => {
-  try {
-    const messages = JSON.parse(value) as ChatMessage[];
-    return Array.isArray(messages) ? messages : [];
-  } catch {
-    return [];
-  }
-}
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorBanner from "../../components/ui/ErrorBanner";
+import PageHeader from "../../components/ui/PageHeader";
+import TableShell from "../../components/ui/TableShell";
+import { useFetch } from "../../lib/hooks";
+import { readMessages, type Conversation } from "../../lib/conversations";
 
 const Conversations = () => {
   const { data, error } = useFetch<Conversation[]>("/api/dashboard/conversations");
@@ -25,25 +12,16 @@ const Conversations = () => {
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="section-label">Inbox</div>
-          <h1 className="page-title mt-1">Conversations</h1>
-          <p className="page-subtitle">Read every chat between visitors and your AI assistant.</p>
-        </div>
-        <div className="status-pill">{conversations.length} conversations</div>
-      </div>
+      <PageHeader
+        label="Inbox"
+        title="Conversations"
+        subtitle="Read every chat between visitors and your AI assistant."
+        right={<span className="status-pill">{conversations.length} conversations</span>}
+      />
 
-      {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+      {error ? <ErrorBanner message={error} className="mt-4" /> : null}
 
-      <div className="table-shell mt-6">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="font-bold text-slate-900">All conversations</h2>
-            <p className="mt-1 text-xs text-slate-500">Newest visitor conversations appear first.</p>
-          </div>
-          <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-brand">Widget inbox</span>
-        </div>
+      <TableShell className="mt-6" title="All conversations" subtitle="Newest visitor conversations appear first.">
         {conversations.length ? (
           <div className="divide-y divide-slate-100">
             {conversations.map((conversation) => {
@@ -74,11 +52,11 @@ const Conversations = () => {
             })}
           </div>
         ) : (
-          <div className="p-12 text-center text-sm text-slate-500">No conversations yet. Visitor messages will appear here once your widget is live.</div>
+          <EmptyState title="No conversations yet" description="Visitor messages will appear here once your widget is live." />
         )}
-      </div>
+      </TableShell>
     </section>
   );
-}
+};
 
 export default Conversations;

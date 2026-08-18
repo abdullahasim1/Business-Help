@@ -1,10 +1,11 @@
-import { Form, Formik } from "formik";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Field from "../components/Field";
-import { api } from "../lib/api";
-import { useFetch } from "../lib/hooks";
-import { knowledgeSchema } from "../lib/validations";
+import Field from "../../components/Field";
+import FormikForm from "../../components/ui/FormikForm";
+import PageHeader from "../../components/ui/PageHeader";
+import { api } from "../../lib/api";
+import { useFetch } from "../../lib/hooks";
+import { knowledgeSchema } from "../../lib/validations";
 
 type KnowledgeDoc = {
   id: number;
@@ -14,6 +15,8 @@ type KnowledgeDoc = {
 };
 
 type KnowledgeData = { knowledgeText: string; documents: KnowledgeDoc[] };
+
+type KnowledgeForm = { type: "MANUAL" | "WEBSITE"; url: string; content: string };
 
 const Knowledge = () => {
   const navigate = useNavigate();
@@ -40,7 +43,7 @@ const Knowledge = () => {
       setUploading(false);
       event.target.value = "";
     }
-  }
+  };
 
   const handleDelete = async (id: number) => {
     setDeletingId(id);
@@ -52,31 +55,25 @@ const Knowledge = () => {
     } finally {
       setDeletingId(null);
     }
-  }
+  };
 
   return (
     <section>
-      <h1 className="page-title">Knowledge Base</h1>
-      <p className="page-subtitle">Keep all business knowledge in one simple place for the AI. Add inline text or upload PDFs.</p>
+      <PageHeader title="Knowledge Base" subtitle="Keep all business knowledge in one simple place for the AI. Add inline text or upload PDFs." />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <Formik
+        <FormikForm<KnowledgeForm>
           initialValues={{ type: "MANUAL", url: "", content: data.knowledgeText }}
-          validationSchema={knowledgeSchema}
-          onSubmit={async (values, { setSubmitting, setStatus }) => {
-            setStatus("");
-            try {
-              await api("/api/knowledge", values);
-              navigate(0);
-            } catch (error) {
-              setStatus((error as Error).message);
-            } finally {
-              setSubmitting(false);
-            }
+          schema={knowledgeSchema}
+          submitLabel="Save knowledge"
+          className="panel grid gap-4 p-5"
+          onSubmit={async (values) => {
+            await api("/api/knowledge", values);
+            navigate(0);
           }}
         >
-          {({ values, isSubmitting, status, setFieldValue }) => (
-            <Form className="panel grid gap-4 p-5">
+          {({ values, setFieldValue }) => (
+            <>
               <h2 className="font-semibold text-slate-900">Inline text</h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
@@ -94,14 +91,9 @@ const Knowledge = () => {
               {values.type === "MANUAL" ? (
                 <Field label="Knowledge content" name="content" as="textarea" className="field min-h-64" placeholder="Services, FAQs, hours, policies..." />
               ) : null}
-
-              {status ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{status}</div> : null}
-              <button type="submit" className="btn-primary w-fit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save knowledge"}
-              </button>
-            </Form>
+            </>
           )}
-        </Formik>
+        </FormikForm>
 
         <div className="panel grid content-start gap-4 p-5">
           <div>
@@ -146,6 +138,6 @@ const Knowledge = () => {
       </div>
     </section>
   );
-}
+};
 
 export default Knowledge;

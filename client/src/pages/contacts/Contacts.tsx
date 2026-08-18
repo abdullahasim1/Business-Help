@@ -1,4 +1,10 @@
-import { useFetch } from "../lib/hooks";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorBanner from "../../components/ui/ErrorBanner";
+import MetricCard from "../../components/MetricCard";
+import PageHeader from "../../components/ui/PageHeader";
+import StatusPill from "../../components/ui/StatusPill";
+import TableShell from "../../components/ui/TableShell";
+import { useFetch } from "../../lib/hooks";
 
 type Contact = {
   id: number;
@@ -23,41 +29,29 @@ const Contacts = () => {
   const { data, error } = useFetch<Contact[]>("/api/dashboard/contacts");
   const contacts = data ?? [];
   const stats = [
-    ["New leads", contacts.filter((c) => c.status === "NEW").length, "Needs follow-up"],
-    ["With email", contacts.filter((c) => c.email).length, "Ready for campaigns"],
-    ["With phone", contacts.filter((c) => c.phone).length, "Ready for call back"]
+    { label: "New leads", value: contacts.filter((c) => c.status === "NEW").length, note: "Needs follow-up" },
+    { label: "With email", value: contacts.filter((c) => c.email).length, note: "Ready for campaigns" },
+    { label: "With phone", value: contacts.filter((c) => c.phone).length, note: "Ready for call back" }
   ];
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="section-label">CRM</div>
-          <h1 className="page-title mt-1">Contacts</h1>
-          <p className="page-subtitle">Every visitor lead captured through your chat and voice assistant.</p>
-        </div>
-        <div className="status-pill">{contacts.length} total contacts</div>
-      </div>
+      <PageHeader
+        label="CRM"
+        title="Contacts"
+        subtitle="Every visitor lead captured through your chat and voice assistant."
+        right={<StatusPill variant="gray">{contacts.length} total contacts</StatusPill>}
+      />
 
-      {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+      {error ? <ErrorBanner message={error} className="mt-4" /> : null}
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {stats.map(([label, value, note]) => (
-          <div key={label as string} className="panel p-5">
-            <div className="text-sm font-semibold text-slate-500">{label}</div>
-            <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</div>
-            <div className="mt-2 text-xs text-slate-400">{note}</div>
-          </div>
+        {stats.map((stat) => (
+          <MetricCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} />
         ))}
       </div>
 
-      <div className="table-shell mt-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="font-bold text-slate-900">All contacts</h2>
-            <p className="mt-1 text-xs text-slate-500">Review contact details, interest, and activity in one place.</p>
-          </div>
-        </div>
+      <TableShell className="mt-6">
         {contacts.length ? (
           <div className="overflow-x-auto">
             <table className="data-table min-w-[760px]">
@@ -93,14 +87,11 @@ const Contacts = () => {
             </table>
           </div>
         ) : (
-          <div className="grid place-items-center px-6 py-16 text-center">
-            <h3 className="font-bold text-slate-900">No contacts yet</h3>
-            <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Contacts will appear when a visitor shares their details through your widget.</p>
-          </div>
+          <EmptyState title="No contacts yet" description="Contacts will appear when a visitor shares their details through your widget." />
         )}
-      </div>
+      </TableShell>
     </section>
   );
-}
+};
 
 export default Contacts;

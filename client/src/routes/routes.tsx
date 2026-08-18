@@ -6,20 +6,20 @@ import { useAppSelector } from "@/store/store";
 import AuthGuard from "./AuthGuard";
 import PublicLayout from "./PublicLayout";
 
-const Login = lazy(() => import("@/pages/Login"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Contacts = lazy(() => import("@/pages/Contacts"));
-const Conversations = lazy(() => import("@/pages/Conversations"));
-const ConversationDetail = lazy(() => import("@/pages/ConversationDetail"));
-const Calls = lazy(() => import("@/pages/Calls"));
-const Bookings = lazy(() => import("@/pages/Bookings"));
-const Agent = lazy(() => import("@/pages/Agent"));
-const Knowledge = lazy(() => import("@/pages/Knowledge"));
-const Widget = lazy(() => import("@/pages/Widget"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const SuperAdmin = lazy(() => import("@/pages/SuperAdmin"));
-const Businesses = lazy(() => import("@/pages/Businesses"));
-const WidgetDemo = lazy(() => import("@/pages/WidgetDemo"));
+const Login = lazy(() => import("@/pages/auth/Login"));
+const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
+const Contacts = lazy(() => import("@/pages/contacts/Contacts"));
+const Conversations = lazy(() => import("@/pages/conversations/Conversations"));
+const ConversationDetail = lazy(() => import("@/pages/conversations/ConversationDetail"));
+const Calls = lazy(() => import("@/pages/calls/Calls"));
+const Bookings = lazy(() => import("@/pages/bookings/Bookings"));
+const Agent = lazy(() => import("@/pages/agent/Agent"));
+const Knowledge = lazy(() => import("@/pages/knowledge/Knowledge"));
+const Widget = lazy(() => import("@/pages/widget/Widget"));
+const Settings = lazy(() => import("@/pages/settings/Settings"));
+const SuperAdmin = lazy(() => import("@/pages/super-admin/SuperAdmin"));
+const Businesses = lazy(() => import("@/pages/super-admin/Businesses"));
+const WidgetDemo = lazy(() => import("@/pages/demo/WidgetDemo"));
 
 const businessRoutes: RouteObject[] = [
   { index: true, element: <Dashboard /> },
