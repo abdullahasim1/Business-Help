@@ -45,9 +45,8 @@ export async function POST(request: Request) {
             role: "BUSINESS_ADMIN"
           }
         },
-        agentName: "Sarah AI",
-        agentInstructions:
-          "You are a helpful AI assistant. Answer questions using the business knowledge provided. Never invent information."
+        agentName: "",
+        agentInstructions: ""
       }
     });
 

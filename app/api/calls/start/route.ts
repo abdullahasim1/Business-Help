@@ -8,6 +8,13 @@ import { startVoiceCall } from "@/lib/voice";
 import { retrieveKnowledge } from "@/lib/knowledge";
 import { email, jsonBody, positiveInt, str, strOptional, strOrNull } from "@/lib/validation";
 
+async function contactSummary(contactId: number | null | undefined) {
+  if (!contactId) return "";
+  const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+  if (!contact) return "";
+  return `Name: ${contact.name || "-"}, Phone: ${contact.phone || "-"}, Email: ${contact.email || "-"}`;
+}
+
 export function OPTIONS(request: Request) {
   return corsOptions(request);
 }
@@ -59,13 +66,15 @@ export async function POST(request: Request) {
       businessId: business.id,
       contactId: resolvedContactId,
       voiceAgentId: business.voiceAgentId,
+      agentName: business.name,
       context: {
         agentName: business.agentName,
         language: business.agentLanguage,
         tone: business.agentTone,
         knowledge: await retrieveKnowledge(business.id),
-        welcomeMessage: business.welcomeMessage,
-        bookingUrl: business.calendlyUrl
+        bookingUrl: business.calendlyUrl,
+        instructions: business.agentInstructions,
+        contactSummary: await contactSummary(resolvedContactId)
       }
     });
     const call = await prisma.call.create({

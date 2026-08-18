@@ -12,8 +12,6 @@
     conversationId: null,
     contactId: null,
     visitorToken: null,
-    leadStep: 0,
-    lead: { name: "", phone: "", email: "" },
     voiceClient: null
   };
   var root = document.createElement("div");
@@ -150,20 +148,7 @@
   function openChat() {
     var box = createWindow(state.config.business.name + " Chat");
     var messages = make("div", "aiw-messages");
-    addMessage(messages, "assistant", state.config.widget.welcomeMessage || "Hi! How can I help today?");
-    addMessage(messages, "assistant", state.contactId ? "How can I help you today?" : leadQuestion());
     box.appendChild(messages);
-
-    if (state.config.business.calendlyUrl) {
-      var booking = make("div", "aiw-booking");
-      var book = button("Book an appointment", "aiw-book-button");
-      book.type = "button";
-      book.onclick = function () {
-        window.open(state.config.business.calendlyUrl, "_blank", "noopener");
-      };
-      booking.appendChild(book);
-      box.appendChild(booking);
-    }
 
     var form = make("form", "aiw-form");
     var input = make("input", "aiw-input");
@@ -183,68 +168,8 @@
     box.appendChild(form);
   }
 
-  function leadQuestion() {
-    if (state.leadStep === 1) return "Thank you. What is your phone number?";
-    if (state.leadStep === 2) return "Great. What is your email address?";
-    return "Welcome! What is your name?";
-  }
-
   async function handleChatMessage(message, messages, input, send) {
-    if (!state.contactId) {
-      await collectChatLead(message, messages, input, send);
-      return;
-    }
     await askAgent(message, messages, input, send);
-  }
-
-  async function collectChatLead(message, messages, input, send) {
-    addMessage(messages, "user", message);
-
-    if (state.leadStep === 0) {
-      state.lead.name = message;
-      state.leadStep = 1;
-      addMessage(messages, "assistant", leadQuestion());
-      return;
-    }
-
-    if (state.leadStep === 1) {
-      state.lead.phone = message;
-      state.leadStep = 2;
-      addMessage(messages, "assistant", leadQuestion());
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(message)) {
-      addMessage(messages, "assistant", "Please enter a valid email address.");
-      return;
-    }
-
-    state.lead.email = message;
-    input.disabled = true;
-    send.disabled = true;
-    var saving = make("div", "aiw-message aiw-bot", "Saving your details...");
-    messages.appendChild(saving);
-
-    try {
-      var data = await request("/api/contacts/capture", {
-        businessId: businessId,
-        name: state.lead.name,
-        phone: state.lead.phone,
-        email: state.lead.email
-      });
-      state.contactId = data.contact.id;
-      state.visitorToken = data.contact.visitorToken;
-      state.leadStep = 3;
-      saving.remove();
-      addMessage(messages, "assistant", "Thank you, " + state.lead.name + ". How can I help you today?");
-    } catch (error) {
-      saving.remove();
-      addMessage(messages, "assistant", errorText(error));
-    } finally {
-      input.disabled = false;
-      send.disabled = false;
-      input.focus();
-    }
   }
 
   async function askAgent(message, messages, input, send) {

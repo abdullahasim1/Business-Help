@@ -57,13 +57,6 @@ export function oneOf(value: unknown, options: readonly string[], name: string, 
   throw new ValidationError(`${name} is invalid`);
 }
 
-export function hexColor(value: unknown, name: string): string {
-  if (typeof value !== "string" || !/^#[0-9a-f]{6}$/i.test(value)) {
-    throw new ValidationError(`${name} is invalid`);
-  }
-  return value;
-}
-
 export function maxLength(value: string | null | undefined, limit: number, name: string): string | null | undefined {
   if (value === undefined || value === null) return value;
   if (typeof value !== "string" || value.length > limit) throw new ValidationError(`${name} is too long`);

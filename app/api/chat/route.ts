@@ -1,9 +1,10 @@
 import { corsJson, corsOptions, publicCorsHeaders } from "@/lib/cors";
-import { createWidgetContact, findBusinessContact } from "@/lib/contacts";
-import { addMessage } from "@/lib/conversations";
+import { randomBytes } from "node:crypto";
+import { createWidgetContact, findBusinessContact, findContactByToken, updateWidgetContact } from "@/lib/contacts";
+import { addMessage, readMessages } from "@/lib/conversations";
 import { generateLocalKnowledgeResponse, generateRetellResponse } from "@/lib/llm";
 import { extractLeadFields } from "@/lib/lead-capture";
-import { ensureChatAgent } from "@/lib/retell-setup";
+import { ensureBusinessChatAgent } from "@/lib/retell-setup";
 import { retrieveKnowledge } from "@/lib/knowledge";
 import { handleRouteError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
@@ -46,35 +47,83 @@ export async function POST(request: Request) {
       return corsJson({ error: "Invalid contact for business" }, { status: 403 }, origin);
     }
 
-    const newContact = existingContact ? null : await createWidgetContact(business.id, extractLeadFields(message));
-    const contactId = existingContact?.id || newContact?.id;
-    const resolvedVisitorToken = existingContact?.visitorToken || newContact?.visitorToken || visitorToken || null;
-
-    const conversation = conversationId
+    let conversation = conversationId
       ? await prisma.conversation.findFirst({
           where: { id: conversationId, businessId: business.id, visitorToken: visitorToken || "" }
         })
-      : await prisma.conversation.create({
-          data: {
+      : null;
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
           businessId: business.id,
-          contactId,
+          contactId: existingContact?.id,
           channel: "WIDGET",
-          visitorToken: resolvedVisitorToken,
+          visitorToken: existingContact?.visitorToken || visitorToken || randomBytes(24).toString("base64url"),
           messagesJson: "[]"
-          }
+        }
+      });
+    }
+
+    let activeContact = existingContact || (await findContactByToken(business.id, visitorToken));
+    if (!activeContact && conversation.contactId) {
+      activeContact = await findBusinessContact(conversation.contactId, business.id, conversation.visitorToken);
+    }
+    if (activeContact && !conversation.contactId) {
+      await prisma.conversation.update({ where: { id: conversation.id }, data: { contactId: activeContact.id } });
+    }
+
+    const conversationText = readMessages(conversation.messagesJson)
+      .filter((item) => item.role === "user")
+      .map((item) => item.content)
+      .join(" ");
+    const extracted = extractLeadFields(`${conversationText} ${message}`);
+
+    if (!activeContact && (extracted.email || extracted.phone || extracted.name)) {
+      activeContact = await prisma.contact.findFirst({
+        where: {
+          businessId: business.id,
+          OR: [
+            ...(extracted.email ? [{ email: extracted.email }] : []),
+            ...(extracted.phone ? [{ phone: extracted.phone }] : []),
+            ...(!extracted.email && !extracted.phone && extracted.name ? [{ name: extracted.name }] : [])
+          ]
+        }
+      });
+      if (activeContact) {
+        await prisma.conversation.update({ where: { id: conversation.id }, data: { contactId: activeContact.id } });
+      }
+    }
+
+    if (activeContact) {
+      await updateWidgetContact(activeContact.id, business.id, activeContact.visitorToken, extracted);
+    } else {
+      const created = await createWidgetContact(business.id, extracted, conversation.visitorToken || undefined);
+      if (created) {
+        activeContact = created;
+        await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { contactId: created.id }
         });
+      }
+    }
+    const contactId = activeContact?.id || null;
 
     if (!conversation) return corsJson({ error: "Conversation not found" }, { status: 404 }, origin);
 
+    const contactSummary = activeContact
+      ? `Name: ${extracted.name || activeContact.name || "-"}, Phone: ${extracted.phone || activeContact.phone || "-"}, Email: ${extracted.email || activeContact.email || "-"}`
+      : "";
     const knowledge = await retrieveKnowledge(business.id);
     const chatContext = {
       agentName: business.agentName,
       language: business.agentLanguage,
       tone: business.agentTone,
       knowledge,
-      welcomeMessage: business.welcomeMessage,
       chatAgentId: business.chatAgentId,
-      bookingUrl: business.calendlyUrl
+      bookingUrl: business.calendlyUrl,
+      instructions: business.agentInstructions,
+      contactSummary
     };
 
     let answer: string;
@@ -82,9 +131,9 @@ export async function POST(request: Request) {
     let chatAgentId = business.chatAgentId;
     if (!chatAgentId) {
       try {
-        chatAgentId = await ensureChatAgent();
+        chatAgentId = await ensureBusinessChatAgent(business.id, business.name);
       } catch (error) {
-        console.error("Default chat agent unavailable", error);
+        console.error("Business chat agent unavailable", error);
       }
     }
     if (chatAgentId) {
@@ -92,7 +141,7 @@ export async function POST(request: Request) {
       providerChatId = result.providerChatId;
       answer = result.answer;
     } else {
-      answer = generateLocalKnowledgeResponse(business.agentName, knowledge, message, business.calendlyUrl);
+      answer = generateLocalKnowledgeResponse(business.agentName, knowledge, message);
     }
 
     await prisma.conversation.update({
@@ -108,7 +157,7 @@ export async function POST(request: Request) {
       response: answer,
       conversationId: conversation.id,
       contactId,
-      visitorToken
+      visitorToken: conversation.visitorToken
     }, undefined, origin);
   } catch (error) {
     return handleRouteError(error, publicCorsHeaders(origin));

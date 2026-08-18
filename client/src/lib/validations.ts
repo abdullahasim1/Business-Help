@@ -15,8 +15,6 @@ export const agentSchema = yup.object({
 });
 
 export const widgetSchema = yup.object({
-  welcomeMessage: yup.string().min(2, "At least 2 characters").required("Welcome message is required"),
-  primaryColor: yup.string().matches(/^#[0-9a-f]{6}$/i, "Use a hex color like #2563eb").required("Color is required"),
   chatEnabled: yup.boolean(),
   callEnabled: yup.boolean(),
   allowedOrigins: yup.string().max(2000).nullable()

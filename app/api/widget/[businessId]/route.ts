@@ -32,7 +32,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ busi
   return corsJson({
     business: { id: business.id, name: business.name, calendlyUrl: business.calendlyUrl },
     widget: {
-      welcomeMessage: business.welcomeMessage,
       primaryColor: business.primaryColor,
       callEnabled: business.callEnabled,
       chatEnabled: business.chatEnabled

@@ -1,19 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { ensureVoiceAgent } from "@/lib/retell-setup";
+import { ensureBusinessVoiceAgent } from "@/lib/retell-setup";
 
 export type VoiceCallContext = {
   agentName: string;
   language: string;
   tone: string;
   knowledge: string;
-  welcomeMessage: string;
   bookingUrl: string | null;
+  instructions: string;
+  contactSummary: string;
 };
 
 export async function startVoiceCall(params: {
   businessId: number;
   contactId?: number;
   voiceAgentId?: string | null;
+  agentName?: string;
   context?: VoiceCallContext;
 }) {
   const apiKey = process.env.RETELL_API_KEY;
@@ -21,9 +23,9 @@ export async function startVoiceCall(params: {
   let voiceAgentId = params.voiceAgentId;
   if (!voiceAgentId && apiKey) {
     try {
-      voiceAgentId = await ensureVoiceAgent();
+      voiceAgentId = await ensureBusinessVoiceAgent(params.businessId, params.agentName || "AI Voice Assistant");
     } catch (error) {
-      console.error("Default voice agent unavailable", error);
+      console.error("Business voice agent unavailable", error);
     }
   }
 
@@ -48,12 +50,13 @@ export async function startVoiceCall(params: {
       ...(params.context
         ? {
             retell_llm_dynamic_variables: {
-              business_knowledge: params.context.knowledge || "No business knowledge has been added yet.",
+              system_instructions: params.context.instructions,
+              contact_summary: params.context.contactSummary,
+              business_knowledge: params.context.knowledge,
               agent_name: params.context.agentName,
               language: params.context.language,
               tone: params.context.tone,
-              welcome_message: params.context.welcomeMessage,
-              booking_url: params.context.bookingUrl || "https://calendly.com/your-name"
+              booking_url: params.context.bookingUrl || ""
             }
           }
         : {})

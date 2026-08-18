@@ -1,27 +1,25 @@
 import { prisma } from "@/lib/prisma";
 
 const SETTINGS = {
-  llmId: "retellDefaultLlmId",
-  chatAgentId: "retellDefaultChatAgentId",
-  voiceAgentId: "retellDefaultVoiceAgentId"
+  llmId: "retellDefaultLlmId"
 } as const;
 
 const cache = new Map<string, string>();
 
-const AGENT_PROMPT = `You are {{agent_name}}, an AI assistant for the business. Always reply in clear, simple English only. Never use Roman Urdu, Urdu, or Hinglish.
+const AGENT_PROMPT = `You are {{agent_name}}.
 
-Use the business knowledge below to answer. If the answer is not in the knowledge, say you do not have that information and politely ask for the visitor's name, phone number, email, and what they need so the team can follow up.
+{{system_instructions}}
 
-When the visitor wants to book an appointment or meeting, share the booking link {{booking_url}} and help them pick a convenient time.
+Previously collected visitor details (do not ask for these again if listed): {{contact_summary}}
 
-Welcome message: {{welcome_message}}
+Answer only the question asked. Keep responses concise and do not add unrelated information.
+Share the booking link {{booking_url}} only when the visitor asks to book or schedule a meeting. Never invent or alter the link. If {{booking_url}} is empty, do not mention any booking link.
+
 Tone: {{tone}}
 Language: {{language}}
 
 Business knowledge:
-{{business_knowledge}}
-
-Never invent prices, offers, or facts that are not in the knowledge.`;
+{{business_knowledge}}`;
 
 function apiKey() {
   const key = process.env.RETELL_API_KEY;
@@ -79,12 +77,13 @@ async function ensureRetellLlm(): Promise<string> {
     general_prompt: AGENT_PROMPT,
     model: "gpt-4.1",
     default_dynamic_variables: {
-      business_knowledge: "No business knowledge has been added yet.",
+      system_instructions: "",
+      contact_summary: "",
+      business_knowledge: "",
       agent_name: "Assistant",
       language: "English",
       tone: "Helpful",
-      welcome_message: "Hi! How can I help today?",
-      booking_url: "https://calendly.com/your-name"
+      booking_url: ""
     }
   });
 
@@ -93,29 +92,29 @@ async function ensureRetellLlm(): Promise<string> {
   return data.llm_id;
 }
 
-// Returns the shared default chat agent, creating it automatically on first use.
-export async function ensureChatAgent(): Promise<string> {
-  const existing = await envId("RETELL_DEFAULT_CHAT_AGENT_ID", SETTINGS.chatAgentId);
-  if (existing) return existing;
+// Returns the business's own chat agent (named after the business), creating it on first use.
+export async function ensureBusinessChatAgent(businessId: number, agentName: string): Promise<string> {
+  const business = await prisma.business.findUnique({ where: { id: businessId }, select: { chatAgentId: true } });
+  if (business?.chatAgentId) return business.chatAgentId;
 
   const llmId = await ensureRetellLlm();
   const data = await retellPost<{ agent_id?: string }>("/create-chat-agent", {
     response_engine: { type: "retell-llm", llm_id: llmId },
-    agent_name: "AI Widget Assistant",
+    agent_name: agentName,
     language: "en-US",
     end_chat_after_silence_ms: 1_800_000,
     auto_close_message: "Thank you for chatting. The conversation has ended."
   });
 
   if (!data.agent_id) throw new Error("Retell did not return an agent_id");
-  await saveSetting(SETTINGS.chatAgentId, data.agent_id);
+  await prisma.business.update({ where: { id: businessId }, data: { chatAgentId: data.agent_id } });
   return data.agent_id;
 }
 
-// Returns the shared default voice agent, creating it automatically on first use.
-export async function ensureVoiceAgent(): Promise<string> {
-  const existing = await envId("RETELL_DEFAULT_VOICE_AGENT_ID", SETTINGS.voiceAgentId);
-  if (existing) return existing;
+// Returns the business's own voice agent (named after the business), creating it on first use.
+export async function ensureBusinessVoiceAgent(businessId: number, agentName: string): Promise<string> {
+  const business = await prisma.business.findUnique({ where: { id: businessId }, select: { voiceAgentId: true } });
+  if (business?.voiceAgentId) return business.voiceAgentId;
 
   const llmId = await ensureRetellLlm();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://")
@@ -124,13 +123,13 @@ export async function ensureVoiceAgent(): Promise<string> {
 
   const data = await retellPost<{ agent_id?: string }>("/v2/create-agent", {
     response_engine: { type: "retell-llm", llm_id: llmId },
-    agent_name: "AI Voice Assistant",
+    agent_name: agentName,
     voice_id: "retell-Cimo",
     language: "en-US",
     ...(appUrl ? { call_webhook_url: `${appUrl}/api/retell/webhook` } : {})
   });
 
   if (!data.agent_id) throw new Error("Retell did not return an agent_id");
-  await saveSetting(SETTINGS.voiceAgentId, data.agent_id);
+  await prisma.business.update({ where: { id: businessId }, data: { voiceAgentId: data.agent_id } });
   return data.agent_id;
 }

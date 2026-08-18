@@ -6,8 +6,6 @@ import { useFetch } from "../lib/hooks";
 import { widgetSchema } from "../lib/validations";
 
 type WidgetData = {
-  welcomeMessage: string;
-  primaryColor: string;
   chatEnabled: boolean;
   callEnabled: boolean;
   allowedOrigins: string | null;
@@ -29,8 +27,6 @@ export default function Widget() {
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <Formik
           initialValues={{
-            welcomeMessage: data.welcomeMessage,
-            primaryColor: data.primaryColor,
             chatEnabled: data.chatEnabled,
             callEnabled: data.callEnabled,
             allowedOrigins: data.allowedOrigins
@@ -50,8 +46,6 @@ export default function Widget() {
         >
           {({ isSubmitting, status }) => (
             <Form className="panel grid gap-4 p-5">
-              <Field label="Welcome message" name="welcomeMessage" placeholder="Hi! How can I help today?" />
-              <Field label="Primary color" name="primaryColor" placeholder="#2563eb" hint="Hex color used by the chat launcher." />
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Chat enabled" name="chatEnabled" type="checkbox" />
                 <Field label="Call enabled" name="callEnabled" type="checkbox" />

@@ -7,8 +7,6 @@ export async function GET() {
   const business = await prisma.business.findUnique({
     where: { id: user.businessId! },
     select: {
-      welcomeMessage: true,
-      primaryColor: true,
       chatEnabled: true,
       callEnabled: true,
       allowedOrigins: true,
@@ -19,8 +17,6 @@ export async function GET() {
 
   if (!business) return NextResponse.json({ error: "Business not found" }, { status: 404 });
   return NextResponse.json({
-    welcomeMessage: business.welcomeMessage,
-    primaryColor: business.primaryColor,
     chatEnabled: business.chatEnabled,
     callEnabled: business.callEnabled,
     allowedOrigins: business.allowedOrigins,
