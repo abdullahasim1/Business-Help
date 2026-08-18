@@ -6,7 +6,7 @@ type SettingsData = {
   status: "ACTIVE" | "INACTIVE";
 };
 
-export default function Settings() {
+const Settings = () => {
   const { data } = useFetch<SettingsData>("/api/dashboard/settings");
 
   return (
@@ -22,7 +22,7 @@ export default function Settings() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+const Row = ({ label, value }: { label: string; value: string }) => {
   return (
     <div className="grid gap-1 p-5 text-sm">
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
@@ -30,3 +30,5 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+export default Settings;

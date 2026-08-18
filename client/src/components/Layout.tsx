@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { api, type SessionUser } from "@/lib/api";
 import { clearUser } from "@/store/slices/userSlice";
 import { useAppDispatch } from "@/store/store";
@@ -29,14 +29,14 @@ const superGroups = [
   { title: "Platform", items: [["Overview", "/super-admin", "⌂"], ["Businesses", "/super-admin/businesses", "▣"]] }
 ];
 
-export function Layout({ user, children }: { user: SessionUser; children: React.ReactNode }) {
+export const Layout = ({ user, children }: { user: SessionUser; children: React.ReactNode }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const isSuper = user.role === "SUPER_ADMIN";
   const navGroups = isSuper ? superGroups : groups;
   const initials = user.name.slice(0, 2).toUpperCase();
 
-  async function logout() {
+  const logout = async () => {
     await api("/api/auth/logout", {});
     dispatch(clearUser());
     navigate("/login");
@@ -88,11 +88,6 @@ export function Layout({ user, children }: { user: SessionUser; children: React.
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 md:px-8">
           <div className="text-sm font-bold text-slate-800">AI Widget</div>
           <div className="flex items-center gap-3">
-            {!isSuper ? (
-              <Link to="/dashboard/widget" className="btn-primary hidden py-2 text-xs sm:inline-flex">
-                Install widget
-              </Link>
-            ) : null}
             <div className="hidden items-center gap-2 border-l border-slate-200 pl-3 md:flex">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-xs font-extrabold text-brand">{initials}</div>
               <span className="max-w-32 truncate text-sm font-semibold text-slate-700">{user.name}</span>

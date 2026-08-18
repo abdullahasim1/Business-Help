@@ -10,7 +10,7 @@ export type Conversation = {
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; createdAt: string };
 
-export function readMessages(value: string): ChatMessage[] {
+export const readMessages = (value: string): ChatMessage[] => {
   try {
     const messages = JSON.parse(value) as ChatMessage[];
     return Array.isArray(messages) ? messages : [];
@@ -19,7 +19,7 @@ export function readMessages(value: string): ChatMessage[] {
   }
 }
 
-export default function Conversations() {
+const Conversations = () => {
   const { data, error } = useFetch<Conversation[]>("/api/dashboard/conversations");
   const conversations = data ?? [];
 
@@ -80,3 +80,5 @@ export default function Conversations() {
     </section>
   );
 }
+
+export default Conversations;

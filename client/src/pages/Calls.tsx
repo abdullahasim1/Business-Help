@@ -11,7 +11,7 @@ type Call = {
   contact: { email: string | null; phone: string | null } | null;
 };
 
-export default function Calls() {
+const Calls = () => {
   const { data, error } = useFetch<Call[]>("/api/dashboard/calls");
   const calls = data ?? [];
 
@@ -64,3 +64,5 @@ export default function Calls() {
     </section>
   );
 }
+
+export default Calls;

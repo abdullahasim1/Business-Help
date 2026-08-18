@@ -13,8 +13,8 @@ export async function POST(request: Request) {
     const password = str(body.password, "password");
     const ip = requestIp(request);
     const key = `login:${ip}:${userEmail}`;
-    if (!allowRequest(key, 5, 15 * 60_000) || !allowRequest(`login-ip:${ip}`, 20, 15 * 60_000)) {
-      return jsonError("Too many login attempts. Please try again in 15 minutes.", 429);
+    if (!allowRequest(key, 5, 60_000) || !allowRequest(`login-ip:${ip}`, 20, 60_000)) {
+      return jsonError("Too many login attempts. Please try again in 1 minute.", 429);
     }
     const user = await prisma.user.findUnique({ where: { email: userEmail } });
     if (!user || !(await verifyPassword(password, user.passwordHash))) {

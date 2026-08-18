@@ -19,7 +19,7 @@ const statusStyle: Record<Contact["status"], string> = {
   LOST: "bg-slate-100 text-slate-600"
 };
 
-export default function Contacts() {
+const Contacts = () => {
   const { data, error } = useFetch<Contact[]>("/api/dashboard/contacts");
   const contacts = data ?? [];
   const stats = [
@@ -102,3 +102,5 @@ export default function Contacts() {
     </section>
   );
 }
+
+export default Contacts;

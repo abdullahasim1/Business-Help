@@ -1,6 +1,6 @@
 import { Form, Formik } from "formik";
 import { useNavigate } from "react-router-dom";
-import { Field } from "../components/Field";
+import Field from "../components/Field";
 import { api } from "../lib/api";
 import { useFetch } from "../lib/hooks";
 import { agentSchema } from "../lib/validations";
@@ -14,7 +14,7 @@ type AgentData = {
   calendlyUrl: string | null;
 };
 
-export default function Agent() {
+const Agent = () => {
   const navigate = useNavigate();
   const { data } = useFetch<AgentData>("/api/dashboard/agent");
 
@@ -78,3 +78,5 @@ export default function Agent() {
     </section>
   );
 }
+
+export default Agent;

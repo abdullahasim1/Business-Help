@@ -1,5 +1,5 @@
 import { Form, Formik } from "formik";
-import { Field } from "../components/Field";
+import Field from "../components/Field";
 import { api } from "../lib/api";
 import { useFetch } from "../lib/hooks";
 import { businessSchema } from "../lib/validations";
@@ -13,7 +13,7 @@ type Business = {
   users: { name: string; email: string }[];
 };
 
-export default function Businesses() {
+const Businesses = () => {
   const { data, error, reload } = useFetch<Business[]>("/api/super-admin/businesses");
   const businesses = data ?? [];
 
@@ -119,3 +119,5 @@ export default function Businesses() {
     </section>
   );
 }
+
+export default Businesses;

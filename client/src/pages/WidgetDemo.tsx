@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 
 type DemoBusiness = { id: number; name: string; publicKey: string } | null;
 
-export default function WidgetDemo() {
+const WidgetDemo = () => {
   const [business, setBusiness] = useState<DemoBusiness>(null);
 
   useEffect(() => {
@@ -57,3 +57,5 @@ export default function WidgetDemo() {
     </main>
   );
 }
+
+export default WidgetDemo;

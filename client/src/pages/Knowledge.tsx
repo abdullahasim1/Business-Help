@@ -1,7 +1,7 @@
 import { Form, Formik } from "formik";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Field } from "../components/Field";
+import Field from "../components/Field";
 import { api } from "../lib/api";
 import { useFetch } from "../lib/hooks";
 import { knowledgeSchema } from "../lib/validations";
@@ -15,7 +15,7 @@ type KnowledgeDoc = {
 
 type KnowledgeData = { knowledgeText: string; documents: KnowledgeDoc[] };
 
-export default function Knowledge() {
+const Knowledge = () => {
   const navigate = useNavigate();
   const { data, reload } = useFetch<KnowledgeData>("/api/dashboard/knowledge");
   const [uploading, setUploading] = useState(false);
@@ -23,7 +23,7 @@ export default function Knowledge() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   if (!data) return null;
 
-  async function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -42,7 +42,7 @@ export default function Knowledge() {
     }
   }
 
-  async function handleDelete(id: number) {
+  const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
       await api(`/api/knowledge/documents/${id}`, {}, { method: "DELETE" });
@@ -147,3 +147,5 @@ export default function Knowledge() {
     </section>
   );
 }
+
+export default Knowledge;

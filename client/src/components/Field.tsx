@@ -1,13 +1,15 @@
 import { Field as FormikField, useField } from "formik";
+import { formControlInputMd } from "@/lib/formControlClasses";
 
 type FieldProps = {
   label: string;
   name: string;
   hint?: string;
+  inputClassName?: string;
   [key: string]: unknown;
 };
 
-export function Field({ label, name, hint, ...rest }: FieldProps) {
+const Field = ({ label, name, hint, inputClassName, ...rest }: FieldProps) => {
   const [, meta] = useField(name);
   const isCheckbox = rest.type === "checkbox";
 
@@ -21,11 +23,13 @@ export function Field({ label, name, hint, ...rest }: FieldProps) {
       ) : (
         <>
           <span>{label}</span>
-          <FormikField name={name} className="field" {...rest} />
+          <FormikField name={name} className={`${formControlInputMd} ${inputClassName ?? ""}`} {...rest} />
         </>
       )}
       {hint && !isCheckbox ? <span className="text-xs font-normal text-slate-400">{hint}</span> : null}
       {meta.touched && meta.error ? <span className="text-xs font-medium text-red-600">{meta.error}</span> : null}
     </label>
   );
-}
+};
+
+export default Field;

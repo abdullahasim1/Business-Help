@@ -166,6 +166,32 @@
       await handleChatMessage(message, messages, input, send);
     };
     box.appendChild(form);
+
+    greetVisitor(messages, input, send);
+  }
+
+  async function greetVisitor(messages, input, send) {
+    input.disabled = true;
+    send.disabled = true;
+    var thinking = make("div", "aiw-message aiw-bot", "Thinking...");
+    messages.appendChild(thinking);
+    try {
+      var data = await request("/api/chat", {
+        businessId: businessId,
+        message: "hi"
+      });
+      state.conversationId = data.conversationId;
+      state.visitorToken = data.visitorToken || state.visitorToken;
+      thinking.remove();
+      addMessage(messages, "assistant", data.response);
+    } catch (error) {
+      thinking.remove();
+      addMessage(messages, "assistant", errorText(error));
+    } finally {
+      input.disabled = false;
+      send.disabled = false;
+      input.focus();
+    }
   }
 
   async function handleChatMessage(message, messages, input, send) {

@@ -1,9 +1,9 @@
-import { MetricCard } from "../components/MetricCard";
+import MetricCard from "../components/MetricCard";
 import { useFetch } from "../lib/hooks";
 
 type OverviewData = { businesses: number; contacts: number; conversations: number; calls: number };
 
-export default function SuperAdmin() {
+const SuperAdmin = () => {
   const { data, error } = useFetch<OverviewData>("/api/super-admin/overview");
 
   return (
@@ -20,3 +20,5 @@ export default function SuperAdmin() {
     </section>
   );
 }
+
+export default SuperAdmin;

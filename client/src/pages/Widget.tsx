@@ -1,6 +1,6 @@
 import { Form, Formik } from "formik";
 import { useNavigate } from "react-router-dom";
-import { Field } from "../components/Field";
+import Field from "../components/Field";
 import { api } from "../lib/api";
 import { useFetch } from "../lib/hooks";
 import { widgetSchema } from "../lib/validations";
@@ -13,7 +13,7 @@ type WidgetData = {
   businessId: number;
 };
 
-export default function Widget() {
+const Widget = () => {
   const navigate = useNavigate();
   const { data } = useFetch<WidgetData>("/api/dashboard/widget");
   if (!data) return null;
@@ -71,3 +71,5 @@ export default function Widget() {
     </section>
   );
 }
+
+export default Widget;

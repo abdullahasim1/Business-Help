@@ -19,7 +19,7 @@ type BookingsResponse = {
   bookings: Booking[];
 };
 
-export default function Bookings() {
+const Bookings = () => {
   const [data, setData] = useState<BookingsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -127,3 +127,5 @@ export default function Bookings() {
     </section>
   );
 }
+
+export default Bookings;
