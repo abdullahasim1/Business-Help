@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorBanner from "../../components/ui/ErrorBanner";
 import MetricCard from "../../components/MetricCard";
@@ -29,9 +30,10 @@ const Contacts = () => {
   const { data, error } = useFetch<Contact[]>("/api/dashboard/contacts");
   const contacts = data ?? [];
   const stats = [
-    { label: "New leads", value: contacts.filter((c) => c.status === "NEW").length, note: "Needs follow-up" },
-    { label: "With email", value: contacts.filter((c) => c.email).length, note: "Ready for campaigns" },
-    { label: "With phone", value: contacts.filter((c) => c.phone).length, note: "Ready for call back" }
+    { label: "New leads", value: contacts.filter((c) => c.status === "NEW").length, icon: "★", iconBg: "bg-blue-50", note: "Needs follow-up" },
+    { label: "Qualified", value: contacts.filter((c) => c.status === "QUALIFIED").length, icon: "✓", iconBg: "bg-amber-50", note: "Ready for sales" },
+    { label: "With email", value: contacts.filter((c) => c.email).length, icon: "✉", iconBg: "bg-emerald-50", note: "Email campaigns ready" },
+    { label: "With phone", value: contacts.filter((c) => c.phone).length, icon: "☎", iconBg: "bg-violet-50", note: "Call-back ready" }
   ];
 
   return (
@@ -40,14 +42,14 @@ const Contacts = () => {
         label="CRM"
         title="Contacts"
         subtitle="Every visitor lead captured through your chat and voice assistant."
-        right={<StatusPill variant="gray">{contacts.length} total contacts</StatusPill>}
+        right={<StatusPill>{contacts.length} total contacts</StatusPill>}
       />
 
       {error ? <ErrorBanner message={error} className="mt-4" /> : null}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <MetricCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} />
+          <MetricCard key={stat.label} label={stat.label} value={stat.value} icon={stat.icon} iconBg={stat.iconBg} note={stat.note} />
         ))}
       </div>
 
@@ -67,21 +69,30 @@ const Contacts = () => {
               </thead>
               <tbody>
                 {contacts.map((contact) => (
-                  <tr key={contact.id}>
-                    <td>
-                      <div className="font-semibold text-slate-900">{contact.name || contact.email || contact.phone || "Unknown visitor"}</div>
-                      <div className="mt-0.5 text-xs text-slate-500">{contact.email || contact.phone || "No contact details"}</div>
-                    </td>
-                    <td className="font-medium text-slate-700">{contact.interestedService || "—"}</td>
-                    <td>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
-                    </td>
-                    <td className="text-slate-600">{contact._count.conversations} chats · {contact._count.calls} calls</td>
-                    <td>
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{contact.source}</span>
-                    </td>
-                    <td className="text-slate-500">{new Date(contact.createdAt).toLocaleDateString()}</td>
-                  </tr>
+                  <Link key={contact.id} to={`/dashboard/contacts/${contact.id}`} className="transition hover:bg-slate-50">
+                    <tr>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand/10 text-xs font-extrabold text-brand">
+                            {(contact.name || contact.email || contact.phone || "U").slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-900">{contact.name || contact.email || contact.phone || "Unknown visitor"}</div>
+                            <div className="mt-0.5 text-xs text-slate-500">{contact.email || contact.phone || "No contact details"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 font-medium text-slate-700">{contact.interestedService || "—"}</td>
+                      <td className="px-5 py-4">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-600">{contact._count.conversations} chats · {contact._count.calls} calls</td>
+                      <td className="px-5 py-4">
+                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{contact.source}</span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-500">{new Date(contact.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  </Link>
                 ))}
               </tbody>
             </table>

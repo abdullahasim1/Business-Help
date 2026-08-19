@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
+    "date-fns": "^4.4.0",
     "next": "15.5.23",
     "pdf-parse": "^1.1.1",
     "prisma": "6.19.3",

@@ -42,7 +42,8 @@ export async function POST(request: Request) {
             name: adminName,
             email: adminEmail,
             passwordHash,
-            role: "BUSINESS_ADMIN"
+            role: "BUSINESS_ADMIN",
+            mustChangePassword: true
           }
         },
         agentName: "",

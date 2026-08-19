@@ -24,11 +24,19 @@ const Knowledge = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   if (!data) return null;
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleUpload = async (file: File) => {
     if (!file) return;
+    if (file.type !== "application/pdf") {
+      setUploadStatus("Please upload a PDF file.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadStatus("File size must be less than 10 MB.");
+      return;
+    }
     setUploading(true);
     setUploadStatus("");
     try {
@@ -41,8 +49,30 @@ const Knowledge = () => {
       setUploadStatus((error as Error).message);
     } finally {
       setUploading(false);
-      event.target.value = "";
     }
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragActive(false);
+    const file = event.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) handleUpload(file);
+    event.target.value = "";
   };
 
   const handleDelete = async (id: number) => {
@@ -66,7 +96,7 @@ const Knowledge = () => {
           initialValues={{ type: "MANUAL", url: "", content: data.knowledgeText }}
           schema={knowledgeSchema}
           submitLabel="Save knowledge"
-          className="panel grid gap-4 p-5"
+          className="panel grid gap-5 p-5"
           onSubmit={async (values) => {
             await api("/api/knowledge", values);
             navigate(0);
@@ -74,7 +104,10 @@ const Knowledge = () => {
         >
           {({ values, setFieldValue }) => (
             <>
-              <h2 className="font-semibold text-slate-900">Inline text</h2>
+              <div>
+                <h2 className="font-semibold text-slate-900">Inline text</h2>
+                <p className="mt-1 text-sm text-slate-500">Paste your services, FAQs, hours, policies, and other information.</p>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
                   <span>Source</span>
@@ -95,16 +128,35 @@ const Knowledge = () => {
           )}
         </FormikForm>
 
-        <div className="panel grid content-start gap-4 p-5">
+        <div className="panel grid gap-5 p-5">
           <div>
             <h2 className="font-semibold text-slate-900">PDF documents</h2>
             <p className="mt-1 text-sm text-slate-500">Upload PDFs — the AI reads their text as part of the knowledge base.</p>
           </div>
 
-          <label className={`flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500 hover:border-brand hover:text-brand ${uploading ? "pointer-events-none opacity-60" : ""}`}>
-            <input type="file" accept="application/pdf" className="hidden" onChange={handleUpload} />
-            {uploading ? "Uploading..." : "Click to upload a PDF (max 10 MB)"}
-          </label>
+          <div
+            className={`relative rounded-lg border-2 border-dashed p-8 text-center transition ${
+              dragActive ? "border-brand bg-brand/5" : "border-slate-300 hover:border-brand hover:bg-brand/5"
+            }`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <input type="file" accept="application/pdf" className="hidden" id="pdf-upload" onChange={handleFileSelect} disabled={uploading} />
+            <label htmlFor="pdf-upload" className="cursor-pointer">
+              <div className="mx-auto h-12 w-12 rounded-full bg-brand/10 flex items-center justify-center text-brand text-2xl">📄</div>
+              <p className="mt-3 text-sm font-medium text-slate-900">Drag & drop a PDF or click to browse</p>
+              <p className="mt-1 text-xs text-slate-500">Max 10 MB • PDF only</p>
+            </label>
+            {uploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">Uploading...</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {uploadStatus ? (
             <div className={`rounded-md px-3 py-2 text-sm ${uploadStatus === "Uploaded successfully." ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
@@ -115,14 +167,17 @@ const Knowledge = () => {
           <ul className="divide-y divide-slate-200">
             {data.documents.map((doc) => (
               <li key={doc.id} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-900">{doc.fileName}</p>
-                  <p className="text-xs text-slate-500">
-                    {(doc.fileSize / 1024).toFixed(1)} KB · {new Date(doc.createdAt).toLocaleDateString()}
-                  </p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="shrink-0 grid h-10 w-10 place-items-center rounded-lg bg-amber-50 text-amber-600 font-bold">📄</div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-900">{doc.fileName}</p>
+                    <p className="text-xs text-slate-500">
+                      {(doc.fileSize / 1024).toFixed(1)} KB · {new Date(doc.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
                 <button
-                  className="btn-secondary shrink-0"
+                  className="btn-secondary shrink-0 text-red-600 hover:bg-red-50 hover:border-red-200"
                   onClick={() => handleDelete(doc.id)}
                   disabled={deletingId === doc.id}
                 >
@@ -131,7 +186,7 @@ const Knowledge = () => {
               </li>
             ))}
             {!data.documents.length ? (
-              <li className="py-4 text-sm text-slate-500">No PDFs uploaded yet.</li>
+              <li className="py-8 text-center text-sm text-slate-500">No PDFs uploaded yet.</li>
             ) : null}
           </ul>
         </div>

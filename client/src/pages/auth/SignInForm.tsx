@@ -7,6 +7,7 @@ import { signInAction, type SignInValues } from "@/pages/auth/authApiCalls";
 import { useAppDispatch } from "@/store/store";
 import { setUser } from "@/store/slices/userSlice";
 
+
 const SignInSchema = Yup.object().shape({
   email: Yup.string().email("Enter a valid email address").required("Email is required"),
   password: Yup.string().min(8, "Password must be at least 8 characters").required("Password is required")
@@ -64,6 +65,9 @@ const SignInForm = () => {
         <Button type="submit" disabled={isSubmitting || !hasAnyInput}>
           {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>
+        <a className="text-center text-sm font-semibold text-brand hover:underline block" href="/auth/forgot-password">
+          Forgot password?
+        </a>
       </form>
     </>
   );

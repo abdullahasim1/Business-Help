@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     await createSession(user.id);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, mustChangePassword: user.mustChangePassword });
   } catch (error) {
     return handleRouteError(error);
   }

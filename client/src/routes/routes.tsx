@@ -7,6 +7,9 @@ import AuthGuard from "./AuthGuard";
 import PublicLayout from "./PublicLayout";
 
 const Login = lazy(() => import("@/pages/auth/Login"));
+const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
 const Contacts = lazy(() => import("@/pages/contacts/Contacts"));
 const Conversations = lazy(() => import("@/pages/conversations/Conversations"));
@@ -64,7 +67,12 @@ const Routes = () => {
     },
     {
       element: <PublicLayout />,
-      children: [{ path: "login", element: <Login /> }]
+      children: [
+        { path: "login", element: <Login /> },
+        { path: "auth/set-new-password", element: <SetNewPassword /> },
+        { path: "auth/forgot-password", element: <ForgotPassword /> },
+        { path: "auth/reset-password", element: <ResetPassword /> }
+      ]
     },
     { path: "widget-demo", element: <WidgetDemo /> },
     { path: "/", element: <Home /> },

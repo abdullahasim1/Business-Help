@@ -6,7 +6,12 @@ export type SignInValues = {
 };
 
 export const signInAction = async (values: SignInValues) => {
-  await api("/api/auth/login", values);
+  const loginResult = await api<{ ok: boolean; mustChangePassword: boolean }>("/api/auth/login", values);
   const { user } = await api<{ user: SessionUser }>("/api/auth/me");
-  return { user, redirect: user.role === "SUPER_ADMIN" ? "/super-admin" : "/dashboard" };
+  const redirect = loginResult.mustChangePassword
+    ? "/auth/set-new-password?first=true"
+    : user.role === "SUPER_ADMIN"
+      ? "/super-admin"
+      : "/dashboard";
+  return { user, redirect, mustChangePassword: loginResult.mustChangePassword };
 };
