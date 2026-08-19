@@ -44,15 +44,15 @@ export const Layout = ({ user, children }: { user: SessionUser; children: React.
 
   return (
     <div className="app-background min-h-screen md:flex">
-      <aside className="flex shrink-0 flex-col border-b border-slate-200 bg-white md:min-h-screen md:w-64 md:border-b-0 md:border-r">
+      <aside className="flex shrink-0 flex-col border-b border-slate-200 bg-white md:min-h-screen md:w-64 md:border-b-0 md:border-r md:sticky md:top-0 md:h-screen md:overflow-y-auto">
         <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand text-sm font-extrabold text-white">AI</div>
-          <div>
+          <div className="min-w-0">
             <div className="truncate text-sm font-bold text-slate-900">{user.businessId ? "Business workspace" : "AI Widget"}</div>
             <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{isSuper ? "Platform admin" : "Business workspace"}</div>
           </div>
         </div>
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 p-3 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.title} className="mb-5 last:mb-0">
               <div className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{group.title}</div>

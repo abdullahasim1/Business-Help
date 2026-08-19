@@ -42,23 +42,23 @@ const LaunchChecklist = ({ agentName, agentStatus, hasKnowledge, hasWebsite }: L
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/60">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Launch checklist</div>
             <StatusPill variant="blue">{completed}/{total} complete</StatusPill>
           </div>
-          <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-900">Keep your assistant ready to help</h2>
+          <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-900 truncate">Keep your assistant ready to help</h2>
         </div>
-        <Link to="/dashboard/widget" className="btn-secondary px-3 py-2 text-xs">
+        <Link to="/dashboard/widget" className="btn-secondary px-3 py-2 text-xs shrink-0">
           Open widget
         </Link>
       </div>
-      <div className="mt-5 grid gap-3">
+      <div className="mt-5 grid gap-3 overflow-hidden">
         {checklist.map((item, _index) => (
           <Link
             key={item.title}
             to={item.href}
-            className="group soft-card flex items-center gap-4 p-4 transition hover:border-blue-200 hover:bg-blue-50/40"
+            className="group soft-card flex items-center gap-4 p-4 transition hover:border-blue-200 hover:bg-blue-50/40 min-w-0"
           >
             <div className={`shrink-0 grid h-10 w-10 place-items-center rounded-lg text-base font-bold ${item.iconBg}`}>
               {item.ready ? (
@@ -68,7 +68,7 @@ const LaunchChecklist = ({ agentName, agentStatus, hasKnowledge, hasWebsite }: L
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-900 group-hover:text-brand transition">{item.title}</p>
+              <p className="text-sm font-semibold text-slate-900 group-hover:text-brand transition truncate">{item.title}</p>
               <p className="mt-0.5 truncate text-xs text-slate-500">{item.text}</p>
             </div>
             <span className="shrink-0 text-lg text-slate-300 group-hover:text-slate-400 transition">›</span>
