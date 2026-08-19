@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorBanner from "../../components/ui/ErrorBanner";
 import MetricCard from "../../components/MetricCard";
@@ -36,6 +35,8 @@ const Contacts = () => {
     { label: "With phone", value: contacts.filter((c) => c.phone).length, icon: "☎", iconBg: "bg-violet-50", note: "Call-back ready" }
   ];
 
+  const navigate = (path: string) => window.location.href = path;
+
   return (
     <section>
       <PageHeader
@@ -56,43 +57,41 @@ const Contacts = () => {
       <TableShell className="mt-6">
         {contacts.length ? (
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[760px]">
+            <table className="data-table min-w-[800px]">
               <thead>
                 <tr>
-                  <th>Contact</th>
-                  <th>Interested in</th>
-                  <th>Status</th>
-                  <th>Activity</th>
-                  <th>Source</th>
-                  <th>Added</th>
+                  <th className="w-64">Contact</th>
+                  <th className="w-48">Interested in</th>
+                  <th className="w-32">Status</th>
+                  <th className="w-48">Activity</th>
+                  <th className="w-36">Source</th>
+                  <th className="w-40">Added</th>
                 </tr>
               </thead>
               <tbody>
                 {contacts.map((contact) => (
-                  <Link key={contact.id} to={`/dashboard/contacts/${contact.id}`} className="transition hover:bg-slate-50">
-                    <tr>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand/10 text-xs font-extrabold text-brand">
-                            {(contact.name || contact.email || contact.phone || "U").slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-slate-900">{contact.name || contact.email || contact.phone || "Unknown visitor"}</div>
-                            <div className="mt-0.5 text-xs text-slate-500">{contact.email || contact.phone || "No contact details"}</div>
-                          </div>
+                  <tr key={contact.id} className="cursor-pointer hover:bg-slate-50" onClick={() => navigate(`/dashboard/contacts/${contact.id}`)}>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand/10 text-xs font-extrabold text-brand">
+                          {(contact.name || contact.email || contact.phone || "U").slice(0, 2).toUpperCase()}
                         </div>
-                      </td>
-                      <td className="px-5 py-4 font-medium text-slate-700">{contact.interestedService || "—"}</td>
-                      <td className="px-5 py-4">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
-                      </td>
-                      <td className="px-5 py-4 text-slate-600">{contact._count.conversations} chats · {contact._count.calls} calls</td>
-                      <td className="px-5 py-4">
-                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{contact.source}</span>
-                      </td>
-                      <td className="px-5 py-4 text-slate-500">{new Date(contact.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  </Link>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 truncate">{contact.name || contact.email || contact.phone || "Unknown visitor"}</div>
+                          <div className="mt-0.5 text-xs text-slate-500 truncate">{contact.email || contact.phone || "No contact details"}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 font-medium text-slate-700 truncate">{contact.interestedService || "—"}</td>
+                    <td className="px-5 py-4">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-600 text-sm">{contact._count.conversations} chats · {contact._count.calls} calls</td>
+                    <td className="px-5 py-4">
+                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{contact.source}</span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-500 text-sm whitespace-nowrap">{new Date(contact.createdAt).toLocaleDateString()}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
