@@ -9,6 +9,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
+      channel: true,
       createdAt: true,
       messagesJson: true,
       contact: { select: { name: true, email: true, phone: true } }

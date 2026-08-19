@@ -54,7 +54,7 @@ const LaunchChecklist = ({ agentName, agentStatus, hasKnowledge, hasWebsite }: L
         </Link>
       </div>
       <div className="mt-5 grid gap-3">
-        {checklist.map((item, index) => (
+        {checklist.map((item, _index) => (
           <Link
             key={item.title}
             to={item.href}

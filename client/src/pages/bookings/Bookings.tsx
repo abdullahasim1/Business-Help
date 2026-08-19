@@ -5,7 +5,6 @@ import EmptyState from "../../components/ui/EmptyState";
 import ErrorBanner from "../../components/ui/ErrorBanner";
 import MetricCard from "../../components/MetricCard";
 import PageHeader from "../../components/ui/PageHeader";
-import StatusPill from "../../components/ui/StatusPill";
 import TableShell from "../../components/ui/TableShell";
 import { api } from "../../lib/api";
 

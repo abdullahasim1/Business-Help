@@ -40,3 +40,9 @@ export const businessSchema = yup.object({
   adminEmail: yup.string().email("Enter a valid email").required("Admin email is required"),
   adminPassword: yup.string().min(8, "At least 8 characters").required("Password is required")
 });
+
+export const settingsSchema = yup.object({
+  name: yup.string().min(2, "At least 2 characters").required("Business name is required"),
+  website: yup.string().url("Enter a valid URL").nullable(),
+  status: yup.string().oneOf(["ACTIVE", "INACTIVE"]).required()
+});

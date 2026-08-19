@@ -1,5 +1,6 @@
 export type Conversation = {
   id: number;
+  channel: "WIDGET" | "DASHBOARD";
   createdAt: string;
   contact: { name: string | null; email: string | null; phone: string | null } | null;
   messagesJson: string;
