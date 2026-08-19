@@ -11,7 +11,7 @@ type RetellCall = {
   call_analysis?: { call_summary?: string };
 };
 
-function validSignature(body: string, signature: string | null) {
+const validSignature = (body: string, signature: string | null): boolean => {
   const apiKey = process.env.RETELL_API_KEY;
   const match = signature?.match(/^v=(\d+),d=([a-f0-9]{64})$/i);
   if (!apiKey || !match) return false;
@@ -22,9 +22,9 @@ function validSignature(body: string, signature: string | null) {
   const expected = createHmac("sha256", apiKey).update(body + match[1]).digest();
   const received = Buffer.from(match[2], "hex");
   return received.length === expected.length && timingSafeEqual(received, expected);
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const rawBody = await request.text();
   if (!validSignature(rawBody, request.headers.get("x-retell-signature"))) {
     return NextResponse.json({ error: "Invalid Retell signature" }, { status: 401 });
@@ -50,4 +50,4 @@ export async function POST(request: Request) {
   });
 
   return new NextResponse(null, { status: 204 });
-}
+};

@@ -2,6 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger";
+  size?: "sm" | "md" | "lg";
   children: ReactNode;
 };
 
@@ -14,9 +15,15 @@ const variants = {
     "inline-flex items-center justify-center gap-1.5 rounded-[14px] bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
 };
 
-const Button = ({ variant = "primary", className, children, type, ...rest }: ButtonProps) => {
+const sizes = {
+  sm: "px-3 py-1.5 text-xs gap-1",
+  md: "px-4 py-2.5 text-sm gap-1.5",
+  lg: "px-6 py-3 text-base gap-2"
+};
+
+const Button = ({ variant = "primary", size = "md", className, children, type, ...rest }: ButtonProps) => {
   return (
-    <button type={type ?? "button"} className={`${variants[variant]} ${className ?? ""}`} {...rest}>
+    <button type={type ?? "button"} className={`${variants[variant]} ${sizes[size]} ${className ?? ""}`} {...rest}>
       {children}
     </button>
   );

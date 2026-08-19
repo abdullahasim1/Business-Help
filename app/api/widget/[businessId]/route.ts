@@ -4,11 +4,9 @@ import { corsOrigin, isAllowedWidgetRequest } from "@/lib/public-widget";
 import { prisma } from "@/lib/prisma";
 import { allowRequest, requestIp } from "@/lib/rate-limit";
 
-export function OPTIONS(request: Request) {
-  return corsOptions(request);
-}
+export const OPTIONS = (request: Request) => corsOptions(request);
 
-export async function GET(request: Request, { params }: { params: Promise<{ businessId: string }> }) {
+export const GET = async (request: Request, { params }: { params: Promise<{ businessId: string }> }) => {
   const origin = corsOrigin(request);
   const businessId = parseId((await params).businessId);
   if (!businessId) return corsJson({ error: "Invalid business ID" }, { status: 400 }, origin);
@@ -38,4 +36,4 @@ export async function GET(request: Request, { params }: { params: Promise<{ busi
     },
     agent: business.agentStatus === "ACTIVE" ? { name: business.agentName } : null
   }, undefined, origin);
-}
+};

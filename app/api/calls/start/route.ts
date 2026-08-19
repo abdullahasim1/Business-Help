@@ -8,18 +8,16 @@ import { startVoiceCall } from "@/lib/voice";
 import { retrieveKnowledge } from "@/lib/knowledge";
 import { email, jsonBody, positiveInt, str, strOptional, strOrNull } from "@/lib/validation";
 
-async function contactSummary(contactId: number | null | undefined) {
+const contactSummary = async (contactId: number | null | undefined): Promise<string> => {
   if (!contactId) return "";
   const contact = await prisma.contact.findUnique({ where: { id: contactId } });
   if (!contact) return "";
   return `Name: ${contact.name || "-"}, Phone: ${contact.phone || "-"}, Email: ${contact.email || "-"}`;
-}
+};
 
-export function OPTIONS(request: Request) {
-  return corsOptions(request);
-}
+export const OPTIONS = (request: Request) => corsOptions(request);
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const origin = corsOrigin(request);
   try {
     const body = await jsonBody(request);
@@ -93,4 +91,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return handleRouteError(error, publicCorsHeaders(origin));
   }
-}
+};

@@ -6,11 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { allowRequest, requestIp } from "@/lib/rate-limit";
 import { email, jsonBody, positiveInt, str, strOptional } from "@/lib/validation";
 
-export function OPTIONS(request: Request) {
-  return corsOptions(request);
-}
+export const OPTIONS = (request: Request) => corsOptions(request);
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const origin = corsOrigin(request);
   try {
     const body = await jsonBody(request);
@@ -48,4 +46,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return handleRouteError(error, publicCorsHeaders(origin));
   }
-}
+};

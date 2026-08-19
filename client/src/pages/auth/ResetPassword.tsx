@@ -4,6 +4,7 @@ import { useFormik } from "formik";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { api } from "@/lib/api";
+import AuthLayout from "@/components/ui/AuthLayout";
 
 const ResetPasswordSchema = Yup.object().shape({
   newPassword: Yup.string().min(8, "Password must be at least 8 characters").required("New password is required"),
@@ -46,67 +47,101 @@ const ResetPassword = () => {
     }
   });
 
-  const { values, isSubmitting, status } = formik;
+  const { values, isSubmitting, status, handleSubmit, handleChange, handleBlur, errors, touched } = formik;
   const hasAnyInput = !!(values.newPassword || values.confirmPassword);
 
   if (!token) {
     return (
-      <div className="auth-shell grid place-items-center p-4">
-        <div className="auth-card w-full max-w-sm p-8 text-center">
-          <div className="text-red-600 text-lg font-semibold">Invalid or missing reset token</div>
-          <a href="/login" className="mt-4 block text-sm font-semibold text-brand hover:underline">
-            Back to Sign In
-          </a>
+      <AuthLayout
+        title="Invalid Reset Link"
+        subtitle="This password reset link is invalid or has expired."
+        illustration={
+          <div className="text-center max-w-md mx-auto">
+            <div className="mb-6 text-6xl">⚠️</div>
+            <h2 className="text-3xl font-bold text-white mb-4">Link Expired</h2>
+            <p className="text-white/80 text-lg leading-relaxed">
+              The password reset link you used is no longer valid. Please request a new one.
+            </p>
+          </div>
+        }
+        footer={<a href="/login" className="text-brand hover:underline font-medium">Back to Sign In</a>}
+      >
+        <div className="text-center">
+          <Button variant="secondary" className="w-full" onClick={() => navigate("/login")} size="lg">
+            Go to Sign In
+          </Button>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="auth-shell grid place-items-center p-4">
-      <div className="auth-card w-full max-w-sm p-8">
-        <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand text-sm font-extrabold text-white">AI</div>
-          <div>
-            <div className="font-bold tracking-tight text-slate-900">AI Widget</div>
-            <div className="text-xs font-semibold text-slate-400">Chat + call assistant</div>
-          </div>
+    <AuthLayout
+      title="Reset Password"
+      subtitle="Enter your new password below."
+      illustration={
+        <div className="text-center max-w-md mx-auto">
+          <div className="mb-6 text-6xl">🔒</div>
+          <h2 className="text-3xl font-bold text-white mb-4">Create New Password</h2>
+          <p className="text-white/80 text-lg leading-relaxed">
+            Your new password should be different from previous ones. Make it strong and memorable.
+          </p>
         </div>
-        <div className="text-center mt-6">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reset Password</h1>
-          <p className="mt-1 text-sm text-slate-500">Enter your new password below.</p>
-        </div>
-
-        <form onSubmit={formik.handleSubmit} className="mt-6 flex w-full flex-col gap-4">
+      }
+      footer={<a href="/login" className="text-brand hover:underline font-medium">Back to Sign In</a>}
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-1.5">
+          <label htmlFor="newPassword" className="block text-sm font-semibold text-slate-700">New Password</label>
           <Input
-            label="New Password"
+            id="newPassword"
             type="password"
             name="newPassword"
             placeholder="Enter new password (min 8 characters)"
-            formik={formik}
+            value={values.newPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.newPassword && errors.newPassword}
+            autoComplete="new-password"
             required
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700">Confirm New Password</label>
           <Input
-            label="Confirm New Password"
+            id="confirmPassword"
             type="password"
             name="confirmPassword"
             placeholder="Confirm new password"
-            formik={formik}
+            value={values.confirmPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.confirmPassword && errors.confirmPassword}
+            autoComplete="new-password"
             required
           />
-          {status ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{status}</div> : null}
-          <Button type="submit" disabled={isSubmitting || !hasAnyInput}>
-            {isSubmitting ? "Resetting..." : "Reset Password"}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <a href="/login" className="text-sm font-semibold text-brand hover:underline">
-            Back to Sign In
-          </a>
         </div>
-      </div>
-    </div>
+
+        {status && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 animate-in fade-in slide-in-from-top-2">
+            <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414 1.414L11.414 10l1.293-1.293a1 1 0 001.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+            {status}
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isSubmitting || !hasAnyInput} size="lg">
+          {isSubmitting ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+              Resetting...
+            </span>
+          ) : (
+            "Reset Password"
+          )}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 };
 

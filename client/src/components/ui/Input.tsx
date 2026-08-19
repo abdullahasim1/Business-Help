@@ -4,29 +4,44 @@ import { formControlInputMd } from "@/lib/formControlClasses";
 
 type InputProps<T> = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
-  formik: FormikProps<T>;
+  formik?: FormikProps<T>;
+  error?: string | false;
 };
 
-const Input = <T,>({ label, name, formik, className, required, ...rest }: InputProps<T>) => {
-  const errors = formik.errors as Record<string, string | undefined>;
-  const touched = formik.touched as Record<string, boolean | undefined>;
-  const error = name ? errors[name] : undefined;
-  const showError = name ? Boolean(error) && (touched[name] || formik.submitCount > 0) : false;
+const Input = <T,>({
+  label,
+  name,
+  formik,
+  error: errorProp,
+  className,
+  required,
+  value,
+  onChange,
+  onBlur,
+  ...rest
+}: InputProps<T>) => {
+  const errors = formik?.errors as Record<string, string | false | undefined>;
+  const touched = formik?.touched as Record<string, boolean | undefined>;
+  const errorFromFormik = name ? errors?.[name] : undefined;
+  const showErrorFromFormik = name ? Boolean(errorFromFormik) && (touched?.[name] || (formik?.submitCount ?? 0) > 0) : false;
+
+  const error = errorProp ?? errorFromFormik;
+  const showError = Boolean(errorProp) || showErrorFromFormik;
 
   return (
     <div className="grid gap-1.5">
       {label ? (
-        <label htmlFor={name} className="text-sm font-semibold text-slate-700">
+        <label htmlFor={name ?? ""} className="text-sm font-semibold text-slate-700">
           {label}
           {required ? <span className="text-red-600"> *</span> : null}
         </label>
       ) : null}
       <input
-        id={name}
-        name={name}
-        value={name ? (formik.values as Record<string, string>)[name] ?? "" : ""}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
+        id={name ?? ""}
+        name={name ?? ""}
+        value={value ?? (name && formik ? (formik.values as Record<string, string>)[name] ?? "" : "")}
+        onChange={onChange ?? (formik?.handleChange as any)}
+        onBlur={onBlur ?? (formik?.handleBlur as any)}
         required={required}
         className={`${formControlInputMd} ${showError ? "border-red-400 focus:border-red-500 focus:ring-red-500/10" : ""} ${className ?? ""}`}
         {...rest}

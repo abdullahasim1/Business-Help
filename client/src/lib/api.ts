@@ -2,7 +2,11 @@ import axios from "axios";
 
 const http = axios.create({ withCredentials: true });
 
-export async function api<T>(path: string, body?: unknown, options?: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" }): Promise<T> {
+export const api = async <T>(
+  path: string,
+  body?: unknown,
+  options?: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" }
+): Promise<T> => {
   try {
     const method = options?.method ?? (body ? "POST" : "GET");
     const response = await http.request<T>({ url: path, method, data: body });
@@ -14,7 +18,7 @@ export async function api<T>(path: string, body?: unknown, options?: { method?: 
     }
     throw error;
   }
-}
+};
 
 export type SessionUser = {
   id: number;
