@@ -69,6 +69,7 @@ const SignInForm = () => {
           error={touched.password && errors.password}
           autoComplete="current-password"
           required
+          showPasswordToggle
         />
       </div>
 

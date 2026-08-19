@@ -71,6 +71,7 @@ const SetNewPassword = () => {
               error={touched.currentPassword && errors.currentPassword}
               autoComplete="current-password"
               required
+              showPasswordToggle
             />
           </div>
         )}
@@ -88,6 +89,7 @@ const SetNewPassword = () => {
             error={touched.newPassword && errors.newPassword}
             autoComplete="new-password"
             required
+            showPasswordToggle
           />
         </div>
 
@@ -104,6 +106,7 @@ const SetNewPassword = () => {
             error={touched.confirmPassword && errors.confirmPassword}
             autoComplete="new-password"
             required
+            showPasswordToggle
           />
         </div>
 

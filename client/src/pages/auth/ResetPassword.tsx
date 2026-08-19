@@ -104,6 +104,7 @@ const ResetPassword = () => {
             error={touched.newPassword && errors.newPassword}
             autoComplete="new-password"
             required
+            showPasswordToggle
           />
         </div>
 
@@ -120,6 +121,7 @@ const ResetPassword = () => {
             error={touched.confirmPassword && errors.confirmPassword}
             autoComplete="new-password"
             required
+            showPasswordToggle
           />
         </div>
 
