@@ -49,12 +49,24 @@ const statusStyle: Record<Contact["status"], string> = {
   LOST: "bg-slate-100 text-slate-600"
 };
 
+type ActivityItem =
+  | { type: "contact"; data: Contact }
+  | { type: "conversation"; data: Conversation };
+
 const Dashboard = () => {
   const { data, error } = useFetch<DashboardData>("/api/dashboard");
   const business = data?.business;
 
   const recentContacts = data?.recentContacts ?? [];
   const recentConversations = data?.recentConversations ?? [];
+
+  // Combine and sort by date, take latest 5
+  const activities: ActivityItem[] = [
+    ...recentContacts.map((c) => ({ type: "contact" as const, data: c })),
+    ...recentConversations.map((c) => ({ type: "conversation" as const, data: c }))
+  ]
+    .sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime())
+    .slice(0, 5);
 
   return (
     <PageContainer>
@@ -83,7 +95,7 @@ const Dashboard = () => {
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.8fr)]">
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-200/60">
-            <div className="flex flex-wrap items-center justify-between gap-4 p-5 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-slate-100">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Recent activity</div>
                 <h2 className="mt-1 text-lg font-bold text-slate-900">Latest leads & chats</h2>
@@ -94,65 +106,67 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="divide-y divide-slate-100">
-              {recentContacts.length > 0 || recentConversations.length > 0 ? (
-                <>
-                  {recentContacts.slice(0, 3).map((contact) => (
-                    <Link
-                      key={`contact-${contact.id}`}
-                      to={`/dashboard/contacts`}
-                      className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50"
-                    >
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-extrabold text-brand">
-                        {(contact.name || contact.email || contact.phone || "U").slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-900">{contact.name || contact.email || contact.phone || "Unknown visitor"}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
-                        </div>
-                        <p className="mt-0.5 truncate text-sm text-slate-500">
-                          {contact.interestedService || "New lead captured"} · {new Date(contact.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs text-slate-400">New lead</span>
-                    </Link>
-                  ))}
-                  {recentConversations.slice(0, 3).map((conversation) => {
-                    const messages = readMessages(conversation.messagesJson);
-                    const last = messages.at(-1);
-                    const name = conversation.contact?.name || conversation.contact?.email || "Unknown visitor";
+              {activities.length > 0 ? (
+                activities.map((activity) => {
+                  if (activity.type === "contact") {
+                    const contact = activity.data;
                     return (
                       <Link
-                        key={`conv-${conversation.id}`}
-                        to={`/dashboard/conversations/${conversation.id}`}
-                        className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50"
+                        key={`contact-${contact.id}`}
+                        to="/dashboard/contacts"
+                        className="flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50"
                       >
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-violet-50 text-xs font-extrabold text-violet-600">
-                          {name.slice(0, 2).toUpperCase()}
+                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-extrabold text-brand">
+                          {(contact.name || contact.email || contact.phone || "U").slice(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-900">{name}</span>
-                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">Chat</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-slate-900 truncate">{contact.name || contact.email || contact.phone || "Unknown visitor"}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${statusStyle[contact.status]}`}>{contact.status}</span>
                           </div>
-                          <p className="mt-0.5 truncate text-sm text-slate-500">
-                            <span className="font-medium text-slate-400">{last?.role === "assistant" ? "Assistant: " : "Visitor: "}</span>
-                            {last?.content || "No messages yet"}
+                          <p className="mt-0.5 truncate text-xs text-slate-500">
+                            {contact.interestedService || "New lead captured"} · {new Date(contact.createdAt).toLocaleString()}
                           </p>
                         </div>
-                        <div className="shrink-0 text-right">
-                          <div className="text-xs font-semibold text-slate-500">{messages.length} msgs</div>
-                          <div className="mt-0.5 text-xs text-slate-400">{new Date(conversation.createdAt).toLocaleString()}</div>
-                        </div>
+                        <span className="shrink-0 text-[10px] text-slate-400">New lead</span>
                       </Link>
                     );
-                  })}
-                </>
+                  }
+                  const conversation = activity.data;
+                  const messages = readMessages(conversation.messagesJson);
+                  const last = messages.at(-1);
+                  const name = conversation.contact?.name || conversation.contact?.email || "Unknown visitor";
+                  return (
+                    <Link
+                      key={`conv-${conversation.id}`}
+                      to={`/dashboard/conversations/${conversation.id}`}
+                      className="flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50"
+                    >
+                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-violet-50 text-xs font-extrabold text-violet-600">
+                        {name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-slate-900 truncate">{name}</span>
+                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-500">Chat</span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          <span className="font-medium text-slate-400">{last?.role === "assistant" ? "Assistant: " : "Visitor: "}</span>
+                          {last?.content || "No messages yet"}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="text-[10px] font-medium text-slate-500">{messages.length} msgs</div>
+                        <div className="text-[10px] text-slate-400">{new Date(conversation.createdAt).toLocaleString()}</div>
+                      </div>
+                    </Link>
+                  );
+                })
               ) : (
-                <div className="px-5 py-12 text-center">
-                  <div className="mx-auto h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-2xl">💬</div>
-                  <p className="mt-3 text-sm font-medium text-slate-900">No activity yet</p>
-                  <p className="mt-1 text-xs text-slate-500">Visitor leads and chats will appear here once your widget is live.</p>
+                <div className="px-4 py-8 text-center">
+                  <div className="mx-auto h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-xl">💬</div>
+                  <p className="mt-2 text-sm font-medium text-slate-900">No activity yet</p>
+                  <p className="text-xs text-slate-500">Visitor leads and chats will appear here once your widget is live.</p>
                 </div>
               )}
             </div>
