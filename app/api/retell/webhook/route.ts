@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 
 type RetellCall = {
@@ -25,29 +26,33 @@ const validSignature = (body: string, signature: string | null): boolean => {
 };
 
 export const POST = async (request: Request) => {
-  const rawBody = await request.text();
-  if (!validSignature(rawBody, request.headers.get("x-retell-signature"))) {
-    return NextResponse.json({ error: "Invalid Retell signature" }, { status: 401 });
-  }
-
-  const payload = JSON.parse(rawBody) as { event?: string; call?: RetellCall };
-  const call = payload.call;
-  if (!call?.call_id || (payload.event !== "call_ended" && payload.event !== "call_analyzed")) {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  const duration = call.start_timestamp && call.end_timestamp ? Math.max(0, Math.round((call.end_timestamp - call.start_timestamp) / 1000)) : undefined;
-  const summary = call.call_analysis?.call_summary || "Call transcript saved.";
-
-  await prisma.call.updateMany({
-    where: { providerCallId: call.call_id },
-    data: {
-      duration,
-      transcript: call.transcript || undefined,
-      recordingUrl: call.recording_url || undefined,
-      summary
+  try {
+    const rawBody = await request.text();
+    if (!validSignature(rawBody, request.headers.get("x-retell-signature"))) {
+      return NextResponse.json({ error: "Invalid Retell signature" }, { status: 401 });
     }
-  });
 
-  return new NextResponse(null, { status: 204 });
+    const payload = JSON.parse(rawBody) as { event?: string; call?: RetellCall };
+    const call = payload.call;
+    if (!call?.call_id || (payload.event !== "call_ended" && payload.event !== "call_analyzed")) {
+      return new NextResponse(null, { status: 204 });
+    }
+
+    const duration = call.start_timestamp && call.end_timestamp ? Math.max(0, Math.round((call.end_timestamp - call.start_timestamp) / 1000)) : undefined;
+    const summary = call.call_analysis?.call_summary || "Call transcript saved.";
+
+    await prisma.call.updateMany({
+      where: { providerCallId: call.call_id },
+      data: {
+        duration,
+        transcript: call.transcript || undefined,
+        recordingUrl: call.recording_url || undefined,
+        summary
+      }
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return handleRouteError(error);
+  }
 };

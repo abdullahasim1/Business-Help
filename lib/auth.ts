@@ -1,11 +1,29 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Role, type User } from "@prisma/client";
 import { prisma } from "./prisma";
 
 export const SESSION_COOKIE = "ai_widget_session";
 const THIRTY_DAYS_MS = 1000 * 60 * 60 * 24 * 30;
+
+// Thrown by the require* guards below. Route handlers catch these via
+// handleRouteError() in lib/http.ts, so API clients get JSON (401/403)
+// instead of a 307 HTML redirect from next/navigation.
+export class UnauthorizedError extends Error {
+  status = 401;
+  constructor(message = "Not authenticated") {
+    super(message);
+    this.name = "UnauthorizedError";
+  }
+}
+
+export class ForbiddenError extends Error {
+  status = 403;
+  constructor(message = "Not authorized") {
+    super(message);
+    this.name = "ForbiddenError";
+  }
+}
 
 export type SessionUser = Pick<User, "id" | "name" | "email" | "role" | "businessId">;
 
@@ -77,24 +95,28 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
 export async function requireUser() {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) throw new UnauthorizedError();
   return user;
 }
 
 export async function requireAdmin() {
   const user = await requireUser();
-  if (user.role !== Role.BUSINESS_ADMIN && user.role !== Role.SUPER_ADMIN) redirect("/login");
+  if (user.role !== Role.BUSINESS_ADMIN && user.role !== Role.SUPER_ADMIN) {
+    throw new ForbiddenError("Admin access required");
+  }
   return user;
 }
 
 export async function requireSuperAdmin() {
   const user = await requireUser();
-  if (user.role !== Role.SUPER_ADMIN) redirect("/dashboard");
+  if (user.role !== Role.SUPER_ADMIN) throw new ForbiddenError("Super admin access required");
   return user;
 }
 
 export async function requireBusinessAdmin() {
   const user = await requireUser();
-  if (user.role !== Role.BUSINESS_ADMIN || !user.businessId) redirect("/super-admin");
+  if (user.role !== Role.BUSINESS_ADMIN || !user.businessId) {
+    throw new ForbiddenError("Business admin access required");
+  }
   return user;
 }
